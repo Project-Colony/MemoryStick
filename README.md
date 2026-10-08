@@ -34,11 +34,11 @@ and a table of contents, from a single executable.
 ## What it does
 
 - GitHub Flavored Markdown, rendered by [comrak](https://github.com/kivikakk/comrak): tables, task lists, strikethrough, autolinks, footnotes and description lists; a YAML front matter block is left out of the page
-- Syntax highlighting with highlight.js (its 36 common languages), in light and dark themes
+- Syntax highlighting with highlight.js (its 36 common languages)
 - Math with KaTeX: `$...$`, `$$...$$` and ```` ```math ```` blocks
 - Mermaid diagrams
 - A table of contents panel built from the document's headings
-- Dark mode
+- Every Colony theme (Gruvbox, Catppuccin, Nord, Rosé Pine and the others): MemoryStick follows the system's light or dark mode in Gruvbox until you pick a theme in the toolbar
 - Images on your device shown from the document's folder and the folders inside it
 - Open a file with the Open button, by dropping it on the window, or by passing its path on the command line: `.md`, `.markdown`, `.mdown`, `.mkd`, `.mkdn` and `.txt` files of up to 32 MiB
 - Web and email links open in your browser or mail app; images hosted on the web are not loaded
@@ -50,7 +50,7 @@ memorystick notes.md
 | Shortcut | Action |
 |---|---|
 | Ctrl+O | Open a file |
-| Ctrl+D | Toggle dark mode |
+| Ctrl+D | Switch the theme between its light and dark variants |
 | Ctrl+R | Reload the current file |
 
 On macOS, use Cmd instead of Ctrl. [docs/sample.md](docs/sample.md) shows
@@ -126,8 +126,9 @@ publishes them.
 ### Privacy policy
 
 MemoryStick has no account, telemetry, analytics, crash reporting or update
-check, and its own code makes no network requests. It keeps no history or
-settings of its own.
+check, and its own code makes no network requests. It keeps no history. Its
+one setting is the theme you pick, which stays in the web view's storage on
+your device.
 
 MemoryStick reads only the files you open yourself, through its Open
 dialog, by dropping them on its window or by naming them on the command

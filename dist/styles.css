@@ -1,3 +1,13 @@
+/*
+ * Every colour is a Colony variable (--colony-*) from
+ * vendor/colony/colony-themes.css; theme.js picks the theme. A colour written
+ * out here would be right in one theme out of 59.
+ */
+:root {
+  --mono: "JetBrainsMono Nerd Font", "JetBrainsMono NF", "JetBrains Mono", "Cascadia Mono", Consolas, Menlo, "DejaVu Sans Mono", monospace;
+  --toolbar-height: 53px;
+}
+
 * { box-sizing: border-box; }
 
 html, body {
@@ -6,76 +16,94 @@ html, body {
   height: 100%;
   font-family: -apple-system, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
   font-size: 16px;
-  background: #ffffff;
-  color: #1f2328;
+  background: var(--colony-bg-primary);
+  color: var(--colony-text-primary);
   -webkit-font-smoothing: antialiased;
 }
 
-body.dark { background: #0d1117; color: #e6edf3; }
+/* text-primary rather than the accent: the accent is under 3:1 on the
+   toolbar in 8 themes, text-primary is at least 3.6:1 everywhere. */
+:focus-visible {
+  outline: 2px solid var(--colony-text-primary);
+  outline-offset: 2px;
+}
 
 /* ===== Toolbar ===== */
 #toolbar {
   position: sticky;
   top: 0;
+  height: var(--toolbar-height);
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 10px 18px;
-  background: #f6f8fa;
-  border-bottom: 1px solid #d0d7de;
+  padding: 0 18px;
+  background: var(--colony-bg-sidebar);
+  border-bottom: 1px solid var(--colony-divider);
+  font-family: var(--mono);
   z-index: 100;
   user-select: none;
 }
-body.dark #toolbar {
-  background: #161b22;
-  border-bottom-color: #30363d;
-}
 
-#toolbar button {
+/* Colony's button: padding 6 x 14, radius 6. */
+#toolbar button,
+#toolbar select {
   padding: 6px 14px;
+  font: inherit;
   font-size: 14px;
-  border: 1px solid #d0d7de;
-  background: #ffffff;
-  color: inherit;
+  border: 1px solid var(--colony-border-subtle);
+  background-color: var(--colony-btn-default);
+  color: var(--colony-text-primary);
   border-radius: 6px;
   cursor: pointer;
-  transition: background 0.15s;
+  transition: background-color 0.15s;
 }
-#toolbar button:hover { background: #eef1f4; }
-body.dark #toolbar button {
-  background: #21262d;
-  border-color: #30363d;
-  color: #e6edf3;
+#toolbar button:hover,
+#toolbar select:hover { background-color: var(--colony-btn-hover); }
+#toolbar button:active { background-color: var(--colony-btn-pressed); }
+
+/* The native arrow ignores the theme, so draw one in the text colour. */
+#toolbar select {
+  -webkit-appearance: none;
+  appearance: none;
+  max-width: 260px;
+  padding-right: 32px;
+  background-image:
+    linear-gradient(45deg, transparent 50%, currentColor 50%),
+    linear-gradient(135deg, currentColor 50%, transparent 50%);
+  background-position: right 18px center, right 13px center;
+  background-size: 5px 5px;
+  background-repeat: no-repeat;
 }
-body.dark #toolbar button:hover { background: #30363d; }
+#toolbar select option { background-color: var(--colony-bg-card); color: var(--colony-text-primary); }
+
+#toolbar label {
+  color: var(--colony-text-secondary);
+  font-size: 13px;
+}
 
 #filename {
   flex: 1;
-  color: #57606a;
+  color: var(--colony-text-secondary);
   font-size: 13px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-body.dark #filename { color: #8b949e; }
 
 /* ===== TOC panel ===== */
 #toc-panel {
   position: fixed;
-  top: 53px;
+  top: var(--toolbar-height);
   left: 0;
   bottom: 0;
   width: 280px;
   overflow-y: auto;
   padding: 20px;
-  background: #f6f8fa;
-  border-right: 1px solid #d0d7de;
+  background: var(--colony-bg-sidebar);
+  border-right: 1px solid var(--colony-divider);
+  font-family: var(--mono);
   z-index: 50;
   transition: transform 0.2s;
-}
-body.dark #toc-panel {
-  background: #161b22;
-  border-right-color: #30363d;
 }
 #toc-panel.hidden { transform: translateX(-100%); }
 .toc-title {
@@ -83,10 +111,9 @@ body.dark #toc-panel {
   font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #57606a;
+  color: var(--colony-text-secondary);
   margin-bottom: 12px;
 }
-body.dark .toc-title { color: #8b949e; }
 #toc-nav ul {
   list-style: none;
   padding-left: 14px;
@@ -95,17 +122,15 @@ body.dark .toc-title { color: #8b949e; }
 #toc-nav > ul { padding-left: 0; }
 #toc-nav li { margin: 4px 0; }
 #toc-nav a {
-  color: #1f2328;
+  color: var(--colony-text-primary);
   text-decoration: none;
   font-size: 13px;
   display: block;
   padding: 3px 6px;
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
 }
-#toc-nav a:hover { background: #eef1f4; }
-body.dark #toc-nav a { color: #e6edf3; }
-body.dark #toc-nav a:hover { background: #30363d; }
+#toc-nav a:hover { background: var(--colony-bg-card-hover); }
 
 body.toc-open #main { margin-left: 280px; }
 
@@ -113,19 +138,19 @@ body.toc-open #main { margin-left: 280px; }
 #drop-hint {
   text-align: center;
   padding: 100px 40px;
-  color: #8b949e;
+  color: var(--colony-text-muted);
 }
 #drop-hint .hint-icon { font-size: 64px; margin-bottom: 16px; }
-#drop-hint .hint-title { font-size: 20px; margin-bottom: 8px; color: #57606a; }
-body.dark #drop-hint .hint-title { color: #c9d1d9; }
+#drop-hint .hint-title { font-size: 20px; margin-bottom: 8px; color: var(--colony-text-secondary); }
 #drop-hint .hint-sub { font-size: 14px; }
 #drop-hint code {
-  background: rgba(175,184,193,0.2);
+  background: var(--colony-bg-card);
   padding: 1px 6px;
   border-radius: 4px;
+  font-family: var(--mono);
 }
 body.drag-over #drop-hint .hint-icon { transform: scale(1.15); }
-body.drag-over #drop-hint .hint-title { color: #0969da; }
+body.drag-over #drop-hint .hint-title { color: var(--colony-accent-blue); }
 
 #main.has-content #drop-hint { display: none; }
 
@@ -145,49 +170,50 @@ body.drag-over #drop-hint .hint-title { color: #0969da; }
   line-height: 1.25;
   scroll-margin-top: 70px;
 }
-#content h1 { font-size: 2em; padding-bottom: 0.3em; border-bottom: 1px solid #d0d7de; }
-#content h2 { font-size: 1.5em; padding-bottom: 0.3em; border-bottom: 1px solid #d0d7de; }
+#content h1 { font-size: 2em; padding-bottom: 0.3em; border-bottom: 1px solid var(--colony-divider); }
+#content h2 { font-size: 1.5em; padding-bottom: 0.3em; border-bottom: 1px solid var(--colony-divider); }
 #content h3 { font-size: 1.25em; }
 #content h4 { font-size: 1em; }
 #content h5 { font-size: 0.875em; }
-#content h6 { font-size: 0.85em; color: #57606a; }
-body.dark #content h1, body.dark #content h2 { border-bottom-color: #30363d; }
-body.dark #content h6 { color: #8b949e; }
+#content h6 { font-size: 0.85em; color: var(--colony-text-secondary); }
 
 #content p { margin: 0 0 16px; }
-#content a { color: #0969da; text-decoration: none; }
-#content a:hover { text-decoration: underline; }
-body.dark #content a { color: #58a6ff; }
+/* Always underlined: the accent is under 3:1 on ayu-light and stellar-blade-eve. */
+#content a {
+  color: var(--colony-accent-blue);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
 
 #content ul, #content ol { padding-left: 2em; margin: 0 0 16px; }
 #content li + li { margin-top: 4px; }
-#content input[type="checkbox"] { margin-right: 6px; }
+#content input[type="checkbox"] { margin-right: 6px; accent-color: var(--colony-accent-blue); }
 
 #content blockquote {
   margin: 0 0 16px;
   padding: 0 1em;
-  color: #57606a;
-  border-left: 0.25em solid #d0d7de;
+  color: var(--colony-text-secondary);
+  border-left: 0.25em solid var(--colony-accent-blue);
 }
-body.dark #content blockquote { color: #8b949e; border-left-color: #30363d; }
 
 #content code {
   padding: 0.2em 0.4em;
-  background: rgba(175,184,193,0.2);
+  background: var(--colony-bg-card);
   border-radius: 6px;
-  font-family: "Cascadia Mono", "Consolas", "Menlo", "Courier New", monospace;
+  font-family: var(--mono);
   font-size: 85%;
 }
+/* On the page background with a border, not filled with bg-card: on bg-card
+   far more themes would put a syntax colour under 3:1. */
 #content pre {
   padding: 16px;
   margin: 0 0 16px;
   overflow-x: auto;
-  background: #f6f8fa;
-  border-radius: 6px;
+  border: 1px solid var(--colony-border-subtle);
+  border-radius: 8px;
   line-height: 1.45;
   font-size: 85%;
 }
-body.dark #content pre { background: #161b22; }
 #content pre code {
   padding: 0;
   background: transparent;
@@ -205,53 +231,68 @@ body.dark #content pre { background: #161b22; }
 #content table th,
 #content table td {
   padding: 6px 13px;
-  border: 1px solid #d0d7de;
+  border: 1px solid var(--colony-border-subtle);
 }
-#content table th { background: #f6f8fa; font-weight: 600; }
-#content table tr:nth-child(2n) { background: #f6f8fa; }
-body.dark #content table th,
-body.dark #content table td { border-color: #30363d; }
-body.dark #content table th { background: #161b22; }
-body.dark #content table tr:nth-child(2n) { background: #161b22; }
+#content table th { background: var(--colony-bg-card); font-weight: 600; }
+#content table tr:nth-child(2n) { background: var(--colony-bg-sidebar); }
 
 #content img { max-width: 100%; height: auto; border-radius: 4px; }
 #content hr {
   height: 1px;
-  background: #d0d7de;
+  background: var(--colony-divider);
   border: 0;
   margin: 24px 0;
 }
-body.dark #content hr { background: #30363d; }
 
 #content kbd {
   display: inline-block;
   padding: 3px 6px;
-  font-family: inherit;
+  font-family: var(--mono);
   font-size: 11px;
   line-height: 10px;
-  color: #1f2328;
-  background: #f6f8fa;
-  border: 1px solid #d0d7de;
+  color: var(--colony-text-primary);
+  background: var(--colony-bg-card);
+  border: 1px solid var(--colony-border-subtle);
   border-radius: 6px;
-  box-shadow: inset 0 -1px 0 #d0d7de;
-}
-body.dark #content kbd {
-  color: #e6edf3;
-  background: #161b22;
-  border-color: #30363d;
-  box-shadow: inset 0 -1px 0 #30363d;
+  box-shadow: inset 0 -1px 0 var(--colony-border-subtle);
 }
 
 /* Footnotes */
-.footnotes { font-size: 85%; border-top: 1px solid #d0d7de; margin-top: 48px; padding-top: 16px; }
-body.dark .footnotes { border-top-color: #30363d; }
+.footnotes { font-size: 85%; border-top: 1px solid var(--colony-divider); margin-top: 48px; padding-top: 16px; }
 
-/* Mermaid */
+/* Mermaid (its colours come from the theme in app.js) */
 .mermaid { text-align: center; margin: 16px 0; }
 .mermaid svg { max-width: 100%; height: auto; }
 
-/* KaTeX */
+/* KaTeX draws in currentColor, so it follows the text colour. */
 .katex-display { overflow-x: auto; overflow-y: hidden; padding: 8px 0; }
 
-/* Switch hljs theme on dark mode */
-body.dark #hljs-light { display: none; }
+/* ===== Syntax highlighting =====
+   highlight.js token groups as in its GitHub theme, one Colony colour each.
+   theme.js sets --hl-* to GitHub's own colour where the palette one would be
+   under 3:1. --colony-warning is not used: as text it is under 3:1 in 16 themes. */
+.hljs { color: var(--colony-text-primary); }
+.hljs-doctag, .hljs-keyword, .hljs-meta .hljs-keyword, .hljs-template-tag,
+.hljs-template-variable, .hljs-type, .hljs-variable.language_ {
+  color: var(--hl-keyword, var(--colony-error));
+}
+.hljs-title, .hljs-title.class_, .hljs-title.class_.inherited__, .hljs-title.function_,
+.hljs-built_in, .hljs-symbol, .hljs-section, .hljs-bullet {
+  color: var(--hl-title, var(--colony-accent-blue));
+}
+.hljs-attr, .hljs-attribute, .hljs-literal, .hljs-meta, .hljs-number, .hljs-operator,
+.hljs-selector-attr, .hljs-selector-class, .hljs-selector-id, .hljs-variable {
+  color: var(--hl-number, var(--colony-accent-icon));
+}
+.hljs-meta .hljs-string, .hljs-regexp, .hljs-string,
+.hljs-name, .hljs-quote, .hljs-selector-pseudo, .hljs-selector-tag {
+  color: var(--hl-string, var(--colony-success));
+}
+.hljs-code, .hljs-comment, .hljs-formula {
+  color: var(--hl-comment, var(--colony-text-muted));
+  font-style: italic;
+}
+.hljs-section, .hljs-strong { font-weight: 700; }
+.hljs-emphasis { font-style: italic; }
+.hljs-addition { background: var(--colony-success-bg); }
+.hljs-deletion { background: var(--colony-error-bg); }

@@ -9,8 +9,8 @@
        Mermaid need for their inline styles. The policy is "csp" in
        src-tauri/tauri.conf.json. -->
   <title>MemoryStick</title>
-  <link rel="stylesheet" href="vendor/highlight/github.min.css" id="hljs-light">
-  <link rel="stylesheet" href="vendor/highlight/github-dark.min.css" id="hljs-dark" disabled>
+  <script src="theme.js"></script>
+  <link rel="stylesheet" href="vendor/colony/colony-themes.css">
   <link rel="stylesheet" href="vendor/katex/katex.min.css">
   <link rel="stylesheet" href="styles.css">
 </head>
@@ -19,7 +19,10 @@
     <button id="open-btn" title="Open a file (Ctrl+O)">📂 Open</button>
     <button id="toc-btn" title="Table of contents">☰ Contents</button>
     <span id="filename">No file</span>
-    <button id="theme-btn" title="Dark mode (Ctrl+D)">🌙</button>
+    <label for="theme-select">Theme</label>
+    <select id="theme-select" title="Ctrl+D switches between light and dark">
+      <option value="">System (Gruvbox)</option>
+    </select>
   </header>
 
   <aside id="toc-panel" class="hidden">

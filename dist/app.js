@@ -8,14 +8,14 @@ window.addEventListener('error', (e) => {
   const el = document.getElementById('content') || document.body;
   if (el) {
     const pre = document.createElement('pre');
-    pre.style.cssText = 'color:#ff6b6b;padding:20px;white-space:pre-wrap;font-size:13px;background:#1a0000;border:1px solid #ff6b6b;margin:20px;';
+    pre.style.cssText = 'color:var(--colony-error);padding:20px;white-space:pre-wrap;font-size:13px;border:1px solid var(--colony-error);margin:20px;';
     pre.textContent = `JS Error: ${e.message}\nat ${e.filename}:${e.lineno}:${e.colno}`;
     el.prepend(pre);
   }
 });
 
 if (!window.__TAURI__) {
-  document.body.innerHTML = '<pre style="color:red;padding:40px">window.__TAURI__ is not available. Check withGlobalTauri: true in tauri.conf.json.</pre>';
+  document.body.innerHTML = '<pre style="color:var(--colony-error);padding:40px">window.__TAURI__ is not available. Check withGlobalTauri: true in tauri.conf.json.</pre>';
   throw new Error('Tauri API unavailable');
 }
 
@@ -32,19 +32,59 @@ const $content = document.getElementById('content');
 const $filename = document.getElementById('filename');
 const $tocPanel = document.getElementById('toc-panel');
 const $tocNav = document.getElementById('toc-nav');
-const $themeBtn = document.getElementById('theme-btn');
-const $hljsLight = document.getElementById('hljs-light');
-const $hljsDark = document.getElementById('hljs-dark');
 
-// ===== Mermaid init =====
-if (window.mermaid) {
-  window.mermaid.initialize({
+// ===== Mermaid =====
+// Mermaid needs literal colours, so they are read from the theme (theme.js)
+// and the diagrams are redrawn when it changes. 'base' is the only Mermaid
+// theme that takes themeVariables. initialize() starts over from Mermaid's
+// defaults, so the whole configuration is passed every time.
+function mermaidConfig() {
+  return {
     startOnLoad: false,
-    theme: 'default',
     securityLevel: 'strict',
-    flowchart: { htmlLabels: true, curve: 'basis' }
+    flowchart: { htmlLabels: true, curve: 'basis' },
+    theme: 'base',
+    themeVariables: {
+      darkMode: isDark(),
+      background: cssVar('--colony-bg-primary'),
+      primaryColor: cssVar('--colony-bg-card'),
+      primaryTextColor: cssVar('--colony-text-primary'),
+      primaryBorderColor: cssVar('--colony-accent-blue'),
+      secondaryColor: cssVar('--colony-bg-card-hover'),
+      tertiaryColor: cssVar('--colony-bg-sidebar'),
+      lineColor: cssVar('--colony-text-muted'),
+      textColor: cssVar('--colony-text-primary'),
+      noteBkgColor: cssVar('--colony-bg-sidebar'),
+      noteTextColor: cssVar('--colony-text-primary'),
+      noteBorderColor: cssVar('--colony-border-subtle'),
+      fontFamily: getComputedStyle(document.body).fontFamily
+    }
+  };
+}
+
+function renderMermaid() {
+  if (!window.mermaid) return;
+  $content.querySelectorAll('.mermaid').forEach(async (el, i) => {
+    const id = `mermaid-${Date.now()}-${i}`;
+    try {
+      const { svg } = await window.mermaid.render(id, el.dataset.source);
+      el.innerHTML = svg;
+    } catch (err) {
+      const pre = document.createElement('pre');
+      pre.style.color = 'var(--colony-error)';
+      pre.textContent = `Mermaid error: ${String(err.message || err)}`;
+      el.replaceChildren(pre);
+    }
   });
 }
+
+if (window.mermaid) window.mermaid.initialize(mermaidConfig());
+
+document.addEventListener('colony-theme-change', () => {
+  if (!window.mermaid) return;
+  window.mermaid.initialize(mermaidConfig());
+  renderMermaid();
+});
 
 // ===== HTML post-processing =====
 function dirname(p) {
@@ -90,6 +130,7 @@ function postProcess() {
       const div = document.createElement('div');
       div.className = 'mermaid';
       div.textContent = codeEl.textContent;
+      div.dataset.source = codeEl.textContent; // kept for redrawing
       pre.replaceWith(div);
       return;
     }
@@ -116,7 +157,7 @@ function postProcess() {
         const html = window.katex.renderToString(tex, {
           displayMode: display,
           throwOnError: false,
-          errorColor: '#cc0000',
+          errorColor: 'var(--colony-error)',
           strict: 'ignore'
         });
         // Replace the whole node (span or pre>code) with the KaTeX HTML
@@ -132,22 +173,7 @@ function postProcess() {
   }
 
   // 4) Mermaid render (after extraction)
-  if (window.mermaid) {
-    const blocks = $content.querySelectorAll('.mermaid');
-    blocks.forEach(async (el, i) => {
-      const code = el.textContent;
-      const id = `mermaid-${Date.now()}-${i}`;
-      try {
-        const { svg } = await window.mermaid.render(id, code);
-        el.innerHTML = svg;
-      } catch (err) {
-        const pre = document.createElement('pre');
-        pre.style.color = '#cc0000';
-        pre.textContent = `Mermaid error: ${String(err.message || err)}`;
-        el.replaceChildren(pre);
-      }
-    });
-  }
+  renderMermaid();
 
   // 5) Build the table of contents
   buildToc();
@@ -156,7 +182,7 @@ function postProcess() {
 function buildToc() {
   const headings = $content.querySelectorAll('h1, h2, h3, h4');
   if (headings.length === 0) {
-    $tocNav.innerHTML = '<em style="color:#8b949e;font-size:13px">No headings in this document</em>';
+    $tocNav.innerHTML = '<em style="color:var(--colony-text-secondary);font-size:13px">No headings in this document</em>';
     return;
   }
   const root = document.createElement('ul');
@@ -271,23 +297,6 @@ document.getElementById('toc-btn').addEventListener('click', () => {
   $tocPanel.classList.toggle('hidden');
 });
 
-function toggleTheme() {
-  const isDark = document.body.classList.toggle('dark');
-  $themeBtn.textContent = isDark ? '☀️' : '🌙';
-  $hljsDark.disabled = !isDark;
-  $hljsLight.disabled = isDark;
-  if (window.mermaid) {
-    window.mermaid.initialize({
-      startOnLoad: false,
-      theme: isDark ? 'dark' : 'default',
-      securityLevel: 'strict'
-    });
-    if (currentFilePath) loadAndRender();
-  }
-}
-
-$themeBtn.addEventListener('click', toggleTheme);
-
 // Keyboard shortcuts
 document.addEventListener('keydown', (e) => {
   if ((e.ctrlKey || e.metaKey) && e.key === 'o') {
@@ -295,7 +304,7 @@ document.addEventListener('keydown', (e) => {
     document.getElementById('open-btn').click();
   } else if ((e.ctrlKey || e.metaKey) && e.key === 'd') {
     e.preventDefault();
-    toggleTheme();
+    toggleMode();
   } else if ((e.ctrlKey || e.metaKey) && e.key === 'r') {
     e.preventDefault();
     if (currentFilePath) loadAndRender();

@@ -50,7 +50,7 @@
     ],
     "category": "Productivity",
     "shortDescription": "A Markdown viewer",
-    "longDescription": "A Markdown viewer with GitHub Flavored Markdown, syntax highlighting, KaTeX math, Mermaid diagrams, a table of contents and a dark mode.",
+    "longDescription": "A Markdown viewer with GitHub Flavored Markdown, syntax highlighting, KaTeX math, Mermaid diagrams, a table of contents and Colony's themes.",
     "fileAssociations": [
       {
         "ext": ["md", "markdown", "mdown", "mkd", "mkdn"],
