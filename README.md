@@ -13,7 +13,7 @@ MemoryStick is a Markdown viewer for Windows, macOS and Linux, written in Rust w
 - Relative images resolved from the document's folder
 - Open a file with the Open button, by dropping it on the window, or by passing its path on the command line
 
-[sample.md](sample.md) shows all of these.
+[sample.md](sample.md) shows most of these.
 
 ## Install
 
