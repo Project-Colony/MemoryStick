@@ -13,7 +13,7 @@ MemoryStick is a Markdown viewer for Windows, macOS and Linux, written in Rust w
 - Relative images resolved from the document's folder
 - Open a file with the Open button, by dropping it on the window, or by passing its path on the command line
 
-[sample.md](sample.md) shows most of these.
+[docs/sample.md](docs/sample.md) shows most of these.
 
 ## Install
 
@@ -96,4 +96,4 @@ version. The full text is in [LICENSE](LICENSE).
 The libraries in `dist/vendor/` keep their own licences: BSD-3-Clause for
 highlight.js, MIT for KaTeX and Mermaid, OFL-1.1 for the KaTeX fonts, and
 those of the packages Mermaid's build contains. See
-[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+[docs/third-party-notices.md](docs/third-party-notices.md).

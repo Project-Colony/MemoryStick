@@ -8,7 +8,7 @@
 #
 # The libraries in dist/vendor/ (highlight.js, KaTeX, Mermaid, the Colony
 # themes) are not packages Dependabot can see. Check them by hand on the
-# weekly pass; THIRD_PARTY_NOTICES.md lists their versions.
+# weekly pass; docs/third-party-notices.md lists their versions.
 version: 2
 updates:
   # A stale action is the same problem as a stale crate, with more privileges.
