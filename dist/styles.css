@@ -3,8 +3,23 @@
  * vendor/colony/colony-themes.css; theme.js picks the theme. A colour written
  * out here would be right in one theme out of 59.
  */
+
+/* The three fonts of every Colony program (fonts/LICENSE), bundled so that
+   no system font stands in for them. Regular, Medium and Bold only. */
+@font-face { font-family: "JetBrainsMono NF"; font-weight: 400; src: url("fonts/JetBrainsMonoNerdFont-Regular.ttf") format("truetype"); }
+@font-face { font-family: "JetBrainsMono NF"; font-weight: 500; src: url("fonts/JetBrainsMonoNerdFont-Medium.ttf") format("truetype"); }
+@font-face { font-family: "JetBrainsMono NF"; font-weight: 700; src: url("fonts/JetBrainsMonoNerdFont-Bold.ttf") format("truetype"); }
+@font-face { font-family: "OpenDyslexic"; font-weight: 400; src: url("fonts/OpenDyslexic-Regular.otf") format("opentype"); }
+@font-face { font-family: "Font Awesome 6 Free"; font-weight: 900; src: url("fonts/fa-solid-900.ttf") format("truetype"); }
+
 :root {
-  --mono: "JetBrainsMono Nerd Font", "JetBrainsMono NF", "JetBrains Mono", "Cascadia Mono", Consolas, Menlo, "DejaVu Sans Mono", monospace;
+  /* Every text goes through --app-font, so the dyslexia font replaces it
+     everywhere at once. Font Awesome only draws the icons JetBrains Mono's
+     Nerd Font lacks. */
+  --icons: "Font Awesome 6 Free";
+  --app-font: "JetBrainsMono NF", var(--icons), monospace;
+  /* Code keeps a monospaced font even with the dyslexia font. */
+  --mono: "JetBrainsMono NF", var(--icons), monospace;
   --toolbar-height: 53px;
 }
 
@@ -14,7 +29,7 @@ html, body {
   margin: 0;
   padding: 0;
   height: 100%;
-  font-family: -apple-system, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  font-family: var(--app-font);
   font-size: 16px;
   background: var(--colony-bg-primary);
   color: var(--colony-text-primary);
@@ -39,7 +54,6 @@ html, body {
   padding: 0 18px;
   background: var(--colony-bg-sidebar);
   border-bottom: 1px solid var(--colony-divider);
-  font-family: var(--mono);
   z-index: 100;
   user-select: none;
 }
@@ -101,7 +115,6 @@ html, body {
   padding: 20px;
   background: var(--colony-bg-sidebar);
   border-right: 1px solid var(--colony-divider);
-  font-family: var(--mono);
   z-index: 50;
   transition: transform 0.2s;
 }

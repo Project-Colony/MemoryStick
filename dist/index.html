@@ -16,8 +16,8 @@
 </head>
 <body>
   <header id="toolbar">
-    <button id="open-btn" title="Open a file (Ctrl+O)">📂 Open</button>
-    <button id="toc-btn" title="Table of contents">☰ Contents</button>
+    <button id="open-btn" title="Open a file (Ctrl+O)"><span class="icon" aria-hidden="true">&#xf07c;</span> Open</button>
+    <button id="toc-btn" title="Table of contents"><span class="icon" aria-hidden="true">&#xf0ca;</span> Contents</button>
     <span id="filename">No file</span>
     <label for="theme-select">Theme</label>
     <select id="theme-select" title="Ctrl+D switches between light and dark">
@@ -32,9 +32,9 @@
 
   <main id="main">
     <div id="drop-hint">
-      <div class="hint-icon">📄</div>
+      <div class="hint-icon" aria-hidden="true">&#xf0f6;</div>
       <div class="hint-title">Drop a <code>.md</code> file here</div>
-      <div class="hint-sub">or click "📂 Open" in the toolbar</div>
+      <div class="hint-sub">or click Open in the toolbar</div>
     </div>
     <article id="content" class="markdown-body"></article>
   </main>

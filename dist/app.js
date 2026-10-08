@@ -62,8 +62,11 @@ function mermaidConfig() {
   };
 }
 
-function renderMermaid() {
+async function renderMermaid() {
   if (!window.mermaid) return;
+  // Mermaid measures its labels: with the font still loading, it would
+  // size them for a fallback font.
+  await document.fonts.ready;
   $content.querySelectorAll('.mermaid').forEach(async (el, i) => {
     const id = `mermaid-${Date.now()}-${i}`;
     try {
@@ -167,7 +170,7 @@ function postProcess() {
           el.outerHTML = html;
         }
       } catch (err) {
-        el.textContent = '⚠️ ' + err.message;
+        el.textContent = '\uf071 ' + err.message;
       }
     });
   }
