@@ -28,10 +28,7 @@
         "default-src": "'self'",
         "script-src": "'self'",
         "style-src": "'self' 'unsafe-inline'",
-        "img-src": [
-          "https: http:",
-          "'self' image: http://image.localhost data:"
-        ],
+        "img-src": "'self' image: http://image.localhost data:",
         "font-src": "'self'",
         "connect-src": "ipc: http://ipc.localhost",
         "object-src": "'none'",

@@ -41,7 +41,7 @@ and a table of contents, from a single executable.
 - Dark mode
 - Images on your device shown from the document's folder and the folders inside it
 - Open a file with the Open button, by dropping it on the window, or by passing its path on the command line: `.md`, `.markdown`, `.mdown`, `.mkd`, `.mkdn` and `.txt` files of up to 32 MiB
-- Web and email links open in your browser or mail app
+- Web and email links open in your browser or mail app; images hosted on the web are not loaded
 
 ```bash
 memorystick notes.md
@@ -145,15 +145,10 @@ in a document can navigate it to another page or file. Web and email links
 open in your default browser or mail app, and only when you click them;
 links to a place in the document scroll to it, and other links do nothing.
 
-Images hosted on the web are the one thing a document can make MemoryStick
-fetch: when a document you open shows them, including as background images,
-they load as soon as the document is displayed, as they would in a browser.
-The servers hosting them receive your IP address and the time, and can tell
-that the document was opened. A document written for the purpose can also use
-them to learn part of the path of the folder it was opened from, such as your
-user name, and whether images it names exist on your device. Other content
-hosted on the web (style sheets, fonts, frames, audio and video) is never
-loaded.
+Nothing in a document can make MemoryStick reach the network: images,
+style sheets, fonts, frames, audio and video hosted on the web are never
+loaded, so a document shows an image only when it is on your device. A web
+link reaches the network only through your browser, once you click it.
 
 MemoryStick's interface is rendered by the operating system's web view
 (Microsoft Edge WebView2 on Windows, WebKit on macOS and Linux), which follows
