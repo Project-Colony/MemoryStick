@@ -1,6 +1,6 @@
 // MemoryStick frontend (Tauri v2)
 // The Tauri bindings are exposed through withGlobalTauri: true.
-// Plugins (dialog) are NOT attached to window.__TAURI__ automatically,
+// Plugins (dialog, opener) are NOT attached to window.__TAURI__ automatically,
 // so they are called through invoke('plugin:NAME|COMMAND', args).
 
 // Show any error right in the page (debugging aid)
@@ -152,22 +152,7 @@ function postProcess() {
     });
   }
 
-  // 5) External links: default browser
-  $content.querySelectorAll('a[href]').forEach(a => {
-    const href = a.getAttribute('href') || '';
-    if (/^https?:\/\//i.test(href)) {
-      a.setAttribute('target', '_blank');
-      a.setAttribute('rel', 'noopener noreferrer');
-    } else if (href.startsWith('#')) {
-      a.addEventListener('click', (e) => {
-        e.preventDefault();
-        const target = document.getElementById(href.substring(1));
-        if (target) target.scrollIntoView({ behavior: 'smooth' });
-      });
-    }
-  });
-
-  // 6) Build the table of contents
+  // 5) Build the table of contents
   buildToc();
 }
 
@@ -189,14 +174,48 @@ function buildToc() {
     const a = document.createElement('a');
     a.textContent = h.textContent.trim();
     a.href = '#' + h.id;
-    a.addEventListener('click', (e) => {
-      e.preventDefault();
-      h.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    });
     li.appendChild(a);
     root.appendChild(li);
   });
 }
+
+// ===== Links =====
+// What a click on a link does. A web or mail link opens in the default
+// browser or mail app, a link to a place in this document scrolls to it,
+// and any other link does nothing: the window itself never navigates.
+// Returns { open: url }, { scrollTo: id } or null.
+function linkAction(href, base) {
+  try {
+    const url = new URL(href, base);
+    const here = new URL(base);
+    if (url.hash && url.href.split('#')[0] === here.href.split('#')[0]) {
+      return { scrollTo: decodeURIComponent(url.hash.slice(1)) };
+    }
+    const web = (url.protocol === 'http:' || url.protocol === 'https:') && url.origin !== here.origin;
+    if (web || url.protocol === 'mailto:') return { open: url.href };
+  } catch (_) {}
+  return null;
+}
+
+// One handler for every link, including those added after rendering
+// (Mermaid diagrams, the table of contents) and <area> elements.
+document.addEventListener('click', (e) => {
+  const link = e.target.closest && e.target.closest('a, area');
+  if (!link) return;
+  e.preventDefault();
+  const href = link.getAttribute('href') ?? link.getAttribute('xlink:href') ?? '';
+  const action = linkAction(href, location.href);
+  if (action && action.open) {
+    invoke('plugin:opener|open_url', { url: action.open })
+      .catch((err) => alert('Cannot open the link: ' + err));
+  } else if (action) {
+    // comrak gives a heading's anchor the id "h-name", while links to the
+    // heading, as on GitHub, are written "#name"
+    const target = document.getElementById(action.scrollTo)
+      || document.getElementById('h-' + action.scrollTo);
+    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+});
 
 // ===== Rendering =====
 async function loadAndRender(filePath) {

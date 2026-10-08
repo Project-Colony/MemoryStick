@@ -85,6 +85,13 @@ fn main() {
                 .build(),
         )
         .plugin(tauri_plugin_dialog::init())
+        // Links are handled by one click handler in app.js, so the plugin's
+        // own link script is left out.
+        .plugin(
+            tauri_plugin_opener::Builder::new()
+                .open_js_links_on_click(false)
+                .build(),
+        )
         .invoke_handler(tauri::generate_handler![load_file])
         .setup(|app| {
             // A file passed as an argument (double-click on Windows/Linux)
