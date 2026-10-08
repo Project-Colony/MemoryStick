@@ -73,8 +73,8 @@ ed25519 key, which Colony verifies before installing it.
 ### Privacy policy
 
 MemoryStick has no account, telemetry, analytics, crash reporting or update
-check, and its own code makes no network requests. It reads the files you
-open on your device and keeps no history or settings of its own.
+check, and its own code makes no network requests. It keeps no history or
+settings of its own.
 
 A document can point to content on the web, and MemoryStick displays it the
 way a browser would: when a document you open contains images hosted on the
