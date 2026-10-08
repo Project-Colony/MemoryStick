@@ -1,6 +1,6 @@
 [package]
 name = "memorystick"
-version = "1.0.0"
+version = "0.1.0" # x-release-please-version
 description = "A Markdown viewer"
 authors = ["MotherSphere"]
 license = "GPL-3.0-or-later"
