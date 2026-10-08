@@ -69,18 +69,15 @@ function isAbsolute(p) {
 }
 
 function postProcess() {
-  // 1) Relative images: convertFileSrc(absolute path)
+  // 1) Relative images: convertFileSrc(absolute path). Other sources are
+  //    left as they are; whether a web (http, https) image loads is up to
+  //    img-src in the CSP (src-tauri/tauri.conf.json).
   if (currentDir) {
     $content.querySelectorAll('img').forEach(img => {
       const src = img.getAttribute('src') || '';
       if (!src) return;
       if (/^(https?:|data:|blob:|asset:|file:)/i.test(src)) return;
-      const absolute = isAbsolute(src) ? src : joinPath(currentDir, src);
-      try {
-        img.src = convertFileSrc(absolute);
-      } catch (_) {
-        img.src = 'file://' + absolute;
-      }
+      img.src = convertFileSrc(isAbsolute(src) ? src : joinPath(currentDir, src));
     });
   }
 
