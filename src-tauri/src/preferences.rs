@@ -53,12 +53,17 @@ pub async fn save_preferences(preferences: Map<String, Value>) -> Result<(), Str
         .map_err(|e| e.to_string())
 }
 
+/// The interface's text, in each of its two languages (design/i18n.md in
+/// Project-Colony-Resources: English is canonical, French complete).
+const STRINGS_EN: &str = include_str!("../../dist/i18n/en.json");
+const STRINGS_FR: &str = include_str!("../../dist/i18n/fr.json");
+
 /// Runs before any script of the page: window.__MEMORYSTICK__ holds the
-/// version and the saved preferences, so the first paint is already in the
-/// user's theme.
+/// version, the saved preferences and the interface's text, so the first
+/// paint is already in the user's theme and language.
 pub fn init_script() -> String {
     format!(
-        "window.__MEMORYSTICK__ = {{ version: {}, preferences: {} }};",
+        "window.__MEMORYSTICK__ = {{ version: {}, preferences: {}, strings: {{ en: {STRINGS_EN}, fr: {STRINGS_FR} }} }};",
         Value::from(env!("CARGO_PKG_VERSION")),
         Value::Object(load()),
     )
@@ -67,6 +72,27 @@ pub fn init_script() -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// A key exists in both languages or in neither, and each file is the
+    /// JSON object of text the page expects.
+    #[test]
+    fn fr_and_en_have_identical_key_sets() {
+        let keys = |json: &str| {
+            let map: Map<String, Value> = serde_json::from_str(json).expect("a JSON object");
+            assert!(map.values().all(Value::is_string), "every value is text");
+            map.into_iter().map(|(key, _)| key).collect::<Vec<_>>()
+        };
+        let (en, fr) = (keys(STRINGS_EN), keys(STRINGS_FR));
+        let only = |a: &[String], b: &[String]| -> Vec<String> {
+            a.iter().filter(|k| !b.contains(k)).cloned().collect()
+        };
+        assert!(
+            only(&en, &fr).is_empty() && only(&fr, &en).is_empty(),
+            "only in en: {:?}, only in fr: {:?}",
+            only(&en, &fr),
+            only(&fr, &en)
+        );
+    }
 
     #[test]
     fn every_folder_is_colony_then_memorystick() {

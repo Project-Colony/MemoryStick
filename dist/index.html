@@ -9,39 +9,52 @@
        Mermaid need for their inline styles. The policy is "csp" in
        src-tauri/tauri.conf.json. -->
   <title>MemoryStick</title>
-  <script src="theme.js"></script>
   <link rel="stylesheet" href="vendor/colony/colony-themes.css">
   <link rel="stylesheet" href="vendor/katex/katex.min.css">
   <link rel="stylesheet" href="styles.css">
+  <!-- After the stylesheets, which a script waits for: theme.js reads the
+       palette, and runs before the first paint. -->
+  <script src="theme.js"></script>
+  <script src="i18n.js"></script>
 </head>
 <body>
   <header id="toolbar">
-    <button id="open-btn" title="Open a file (Ctrl+O)"><span class="icon" aria-hidden="true">&#xf07c;</span> Open</button>
-    <button id="toc-btn" title="Table of contents"><span class="icon" aria-hidden="true">&#xf0ca;</span> Contents</button>
-    <span id="filename">No file</span>
-    <label for="theme-select">Theme</label>
-    <select id="theme-select" title="Ctrl+D switches between light and dark">
-      <option value="">System (Gruvbox)</option>
-    </select>
+    <!-- The program's name is the way into Preferences, as in every Colony
+         program (design/navigation.md in Project-Colony-Resources). -->
+    <button id="identity" aria-pressed="false" aria-controls="preferences" data-i18n-title="identity_tooltip">
+      MemoryStick <span class="icon gear" aria-hidden="true">&#xf013;</span>
+    </button>
+    <button id="open-btn" data-i18n-title="toolbar_open_tooltip"><span class="icon" aria-hidden="true">&#xf07c;</span> <span data-i18n="toolbar_open"></span></button>
+    <button id="toc-btn" data-i18n-title="toolbar_contents_tooltip"><span class="icon" aria-hidden="true">&#xf0ca;</span> <span data-i18n="toolbar_contents"></span></button>
+    <span id="filename" data-i18n="toolbar_no_file"></span>
   </header>
 
   <aside id="toc-panel" class="hidden">
-    <div class="toc-title">Table of contents</div>
+    <div class="toc-title" data-i18n="toc_title"></div>
     <nav id="toc-nav"></nav>
   </aside>
 
   <main id="main">
     <div id="drop-hint">
       <div class="hint-icon" aria-hidden="true">&#xf0f6;</div>
-      <div class="hint-title">Drop a <code>.md</code> file here</div>
-      <div class="hint-sub">or click Open in the toolbar</div>
+      <div class="hint-title" data-i18n="drop_title"></div>
+      <div class="hint-sub" data-i18n="drop_subtitle"></div>
     </div>
     <article id="content" class="markdown-body"></article>
   </main>
+
+  <!-- Replaces #main while open; filled in by preferences.js. -->
+  <section id="preferences" hidden></section>
+
+  <div id="toast" hidden>
+    <span id="toast-text"></span>
+    <button id="toast-close" class="icon" data-i18n-title="toast_dismiss" data-i18n-label="toast_dismiss">&#xf00d;</button>
+  </div>
 
   <script src="vendor/highlight/highlight.min.js"></script>
   <script src="vendor/katex/katex.min.js"></script>
   <script src="vendor/mermaid/mermaid.min.js"></script>
   <script src="app.js"></script>
+  <script src="preferences.js"></script>
 </body>
 </html>

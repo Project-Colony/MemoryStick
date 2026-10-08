@@ -8,8 +8,8 @@ window.addEventListener('error', (e) => {
   const el = document.getElementById('content') || document.body;
   if (el) {
     const pre = document.createElement('pre');
-    pre.style.cssText = 'color:var(--colony-error);padding:20px;white-space:pre-wrap;font-size:13px;border:1px solid var(--colony-error);margin:20px;';
-    pre.textContent = `JS Error: ${e.message}\nat ${e.filename}:${e.lineno}:${e.colno}`;
+    pre.className = 'error-box';
+    pre.textContent = t('error_interface', `${e.message}\n${e.filename}:${e.lineno}:${e.colno}`);
     el.prepend(pre);
   }
 });
@@ -22,6 +22,28 @@ if (!window.__TAURI__) {
 const invoke = window.__TAURI__.core.invoke;
 const convertFileSrc = window.__TAURI__.core.convertFileSrc;
 const listen = window.__TAURI__.event.listen;
+
+translate();
+
+// ===== Messages =====
+// A dismissible note at the bottom of the window: a confirmation, or an
+// error (announced at once to screen readers).
+const $toast = document.getElementById('toast');
+let toastTimer;
+function showToast(text, error = false) {
+  document.getElementById('toast-text').textContent = text;
+  $toast.classList.toggle('error', error);
+  $toast.setAttribute('role', error ? 'alert' : 'status');
+  $toast.hidden = false;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { $toast.hidden = true; }, error ? 8000 : 3000);
+}
+document.getElementById('toast-close').addEventListener('click', () => { $toast.hidden = true; });
+
+// A command's error: main.rs gives { key, detail } for a document.
+function failureText(err) {
+  return err && err.key ? t(err.key, err.detail ?? undefined) : String(err);
+}
 
 // ===== State =====
 let currentFilePath = null;
@@ -74,8 +96,8 @@ async function renderMermaid() {
       el.innerHTML = svg;
     } catch (err) {
       const pre = document.createElement('pre');
-      pre.style.color = 'var(--colony-error)';
-      pre.textContent = `Mermaid error: ${String(err.message || err)}`;
+      pre.className = 'error-box';
+      pre.textContent = t('error_diagram', String(err.message || err));
       el.replaceChildren(pre);
     }
   });
@@ -185,7 +207,10 @@ function postProcess() {
 function buildToc() {
   const headings = $content.querySelectorAll('h1, h2, h3, h4');
   if (headings.length === 0) {
-    $tocNav.innerHTML = '<em style="color:var(--colony-text-secondary);font-size:13px">No headings in this document</em>';
+    const empty = document.createElement('em');
+    empty.className = 'toc-empty';
+    empty.textContent = t('toc_empty');
+    $tocNav.replaceChildren(empty);
     return;
   }
   const root = document.createElement('ul');
@@ -200,10 +225,34 @@ function buildToc() {
     const a = document.createElement('a');
     a.textContent = h.textContent.trim();
     a.href = '#' + h.id;
+    a.dataset.heading = h.id;
     li.appendChild(a);
     root.appendChild(li);
   });
+  markCurrentHeading();
 }
+
+// The table of contents marks the section being read: the last heading
+// that has scrolled up to the toolbar.
+function markCurrentHeading() {
+  const toolbarBottom = document.getElementById('toolbar').offsetHeight + 30;
+  let current = null;
+  for (const a of $tocNav.querySelectorAll('a')) {
+    const heading = document.getElementById(a.dataset.heading);
+    if (!heading || heading.getBoundingClientRect().top > toolbarBottom) break;
+    current = a;
+  }
+  $tocNav.querySelectorAll('a').forEach((a) => {
+    if (a === current) a.setAttribute('aria-current', 'location');
+    else a.removeAttribute('aria-current');
+  });
+}
+let markPending = false;
+window.addEventListener('scroll', () => {
+  if (markPending) return;
+  markPending = true;
+  requestAnimationFrame(() => { markPending = false; markCurrentHeading(); });
+}, { passive: true });
 
 // ===== Links =====
 // What a click on a link does. A web or mail link opens in the default
@@ -242,13 +291,15 @@ document.addEventListener('click', (e) => {
   const action = linkAction(href, location.href);
   if (action && action.open) {
     invoke('plugin:opener|open_url', { url: action.open })
-      .catch((err) => alert('Cannot open the link: ' + err));
+      .catch((err) => showToast(t('error_cannot_open_link', err), true));
   } else if (action) {
     // comrak gives a heading's anchor the id "h-name", while links to the
     // heading, as on GitHub, are written "#name"
     const target = document.getElementById(action.scrollTo)
       || document.getElementById('h-' + action.scrollTo);
-    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    // Smooth unless motion is off (theme.js sets data-still).
+    const behavior = $root.hasAttribute('data-still') ? 'auto' : 'smooth';
+    if (target) target.scrollIntoView({ behavior, block: 'start' });
   }
 }, true);
 
@@ -268,6 +319,9 @@ function render(result) {
   doc.content.querySelectorAll('meta, link').forEach((el) => el.remove());
   $content.replaceChildren(doc.content);
   $main.classList.add('has-content');
+  // A document takes the window back from Preferences.
+  if (document.body.classList.contains('prefs-open')) togglePreferences(false);
+  delete $filename.dataset.i18n; // a file name, not interface text
   $filename.textContent = result.file_name;
   document.title = `${result.file_name} - MemoryStick`;
 
@@ -281,17 +335,17 @@ async function loadAndRender() {
     const result = await invoke('load_file');
     if (result) render(result);
   } catch (err) {
-    alert('Error: ' + err);
+    showToast(failureText(err), true);
   }
 }
 
 // ===== UI handlers =====
 document.getElementById('open-btn').addEventListener('click', async () => {
   try {
-    const result = await invoke('open_document', { allFiles: 'All files' });
+    const result = await invoke('open_document', { allFiles: t('dialog_all_files') });
     if (result) render(result);
   } catch (err) {
-    alert('Error: ' + err);
+    showToast(failureText(err), true);
   }
 });
 

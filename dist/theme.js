@@ -1,12 +1,13 @@
-// Colony themes. This file is loaded in <head>, before the stylesheets apply,
-// so the first paint already has the theme's colours and a dark theme never
-// flashes light. With no saved choice MemoryStick follows the system, in
-// Gruvbox, Colony's default family. The picker is set up once the page is
-// parsed; app.js redraws the Mermaid diagrams on 'colony-theme-change'.
+// Appearance: the Colony theme, the accent, high contrast, the text size,
+// the dyslexia font and motion, all set on <html>. Loaded in <head> after
+// the stylesheets, since it reads the palette, so the first paint already
+// has the user's theme and a dark theme never flashes light. With no saved
+// theme MemoryStick follows the system in Gruvbox, Colony's default family.
+// app.js redraws the Mermaid diagrams on 'colony-theme-change'.
 
 const $root = document.documentElement;
 const systemDark = matchMedia('(prefers-color-scheme: dark)');
-const themes = []; // { slug, family, mode }, from vendor/colony/themes.json
+const systemReducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 
 // What the user chose, as main.rs saved it under Colony/MemoryStick (it
 // hands it over in window.__MEMORYSTICK__ before this script runs).
@@ -14,34 +15,47 @@ const prefs = (window.__MEMORYSTICK__ && window.__MEMORYSTICK__.preferences) || 
 
 function savePreferences() {
   window.__TAURI__.core.invoke('save_preferences', { preferences: prefs })
-    .catch((err) => console.error('Preferences not saved:', err));
+    .catch((err) => showToast(t('error_cannot_save', err), true));
 }
 
-let chosenTheme = typeof prefs.theme === 'string' ? prefs.theme : ''; // '' = follow the system
-const systemTheme = () => (systemDark.matches ? 'gruvbox-dark' : 'gruvbox-light');
-$root.dataset.colonyTheme = chosenTheme || systemTheme();
+// Every family, variant and accent (vendor/colony/themes.json), once loaded.
+let themeList = { families: [], accents: [] };
+const themeListLoaded = fetch('vendor/colony/themes.json')
+  .then((response) => response.json())
+  .then((list) => { themeList = list; })
+  .catch((err) => console.error('Colony theme list unavailable:', err));
 
 const cssVar = (name) => getComputedStyle($root).getPropertyValue(name).trim();
-const isDark = () => getComputedStyle($root).getPropertyValue('color-scheme').trim() === 'dark';
+const isDark = () => cssVar('color-scheme') === 'dark';
+const systemTheme = () => (systemDark.matches ? 'gruvbox-dark' : 'gruvbox-light');
 
-function applyTheme(slug) {
-  chosenTheme = slug;
-  $root.dataset.colonyTheme = slug || systemTheme();
-  prefs.theme = slug || null;
-  savePreferences();
-  document.getElementById('theme-select').value = slug;
-  keepHighlightLegible();
-  document.dispatchEvent(new Event('colony-theme-change'));
-}
+// Typography size and Accessibility text size; they multiply.
+const SIZES = { small: 0.85, default: 1, large: 1.2, xlarge: 1.4 };
 
-// Ctrl+D: the family's variant in the other mode, or Gruvbox's when the
-// family has only one mode.
-function toggleMode() {
-  const dark = isDark();
-  const current = themes.find((t) => t.slug === $root.dataset.colonyTheme);
-  const other = current && themes.find((t) => t.family === current.family && (t.mode === 'dark') !== dark);
-  applyTheme(other ? other.slug : dark ? 'gruvbox-light' : 'gruvbox-dark');
-}
+const reducedMotion = () =>
+  (typeof prefs.reducedMotion === 'boolean' ? prefs.reducedMotion : systemReducedMotion.matches);
+
+// #rrggbb channels as 0..1, and back.
+const channels = (hex) => {
+  const n = parseInt(hex.slice(1), 16);
+  return [n >> 16, (n >> 8) & 255, n & 255].map((c) => c / 255);
+};
+const toHex = (rgb) => '#' + rgb
+  .map((c) => Math.round(Math.min(1, Math.max(0, c)) * 255).toString(16).padStart(2, '0'))
+  .join('');
+
+// High contrast derives a boosted palette from the active one, as
+// colony_ui's with_high_contrast does: these fields move away from the
+// background by [amount in a dark theme, amount in a light theme].
+const HIGH_CONTRAST = {
+  'text-primary': [0.12, 0.15],
+  'text-secondary': [0.10, 0.12],
+  'text-muted': [0.10, 0.10],
+  'text-dim': [0.08, 0.10],
+  'text-dimmer': [0.08, 0.08],
+  'border-subtle': [0.12, 0.15],
+  divider: [0.12, 0.15],
+};
 
 // highlight.js tokens take palette colours (styles.css). In a theme where
 // the first is under 3:1 on the code background, the token takes the next
@@ -56,11 +70,7 @@ const HIGHLIGHT = {
 
 // WCAG relative luminance of a #rrggbb colour.
 function luminance(hex) {
-  const n = parseInt(hex.slice(1), 16);
-  const [r, g, b] = [n >> 16, (n >> 8) & 255, n & 255].map((c) => {
-    c /= 255;
-    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
-  });
+  const [r, g, b] = channels(hex).map((c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4));
   return 0.2126 * r + 0.7152 * g + 0.0722 * b;
 }
 
@@ -69,38 +79,64 @@ function contrast(a, b) {
   return (hi + 0.05) / (lo + 0.05);
 }
 
-function keepHighlightLegible() {
+function applyAppearance() {
+  // Back to the theme's own palette first, then the user's changes on top.
+  for (const field of Object.keys(HIGH_CONTRAST)) $root.style.removeProperty('--colony-' + field);
+  $root.style.removeProperty('--colony-accent-blue');
+  $root.dataset.colonyTheme = prefs.theme || systemTheme();
+  // A saved theme this build does not have falls back to the system, as
+  // colony-ui does.
+  if (!cssVar('--colony-bg-primary')) $root.dataset.colonyTheme = systemTheme();
+
+  // No override, or auto accent, leaves the theme's own accent.
+  const accent = !prefs.autoAccent && themeList.accents.find((a) => a.key === prefs.accent);
+  if (accent) $root.style.setProperty('--colony-accent-blue', accent.color);
+
+  if (prefs.highContrast) {
+    // colony_ui's is_light: YIQ luma of the background over 0.5.
+    const [r, g, b] = channels(cssVar('--colony-bg-primary'));
+    const light = 0.299 * r + 0.587 * g + 0.114 * b > 0.5;
+    for (const [field, [dark, lighter]] of Object.entries(HIGH_CONTRAST)) {
+      const shift = light ? -lighter : dark;
+      const name = '--colony-' + field;
+      $root.style.setProperty(name, toHex(channels(cssVar(name)).map((c) => c + shift)));
+    }
+  }
+
   const background = cssVar('--colony-bg-primary');
   for (const [token, candidates] of Object.entries(HIGHLIGHT)) {
     // An unreadable value gives NaN, which counts as illegible.
     const legible = candidates.find((name) => contrast(cssVar(name), background) >= 3);
     $root.style.setProperty('--hl-' + token, `var(${legible || '--colony-text-primary'})`);
   }
+
+  const fontSize = ['small', 'large'].includes(prefs.fontSize) ? prefs.fontSize : 'default';
+  $root.style.setProperty('--font-scale', SIZES[fontSize] * (SIZES[prefs.textSize] || 1));
+  $root.toggleAttribute('data-dyslexia', prefs.dyslexiaFont === true);
+  // Reduced motion silences every animation; so does turning them off.
+  $root.toggleAttribute('data-still', reducedMotion() || prefs.animations === false);
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  const select = document.getElementById('theme-select');
+// After a change: applies it, and lets the page redraw what depends on it.
+function updateAppearance() {
+  applyAppearance();
+  document.dispatchEvent(new Event('colony-theme-change'));
+}
 
-  // A saved theme this build does not have falls back to the system, as
-  // colony-ui does.
-  if (!cssVar('--colony-bg-primary')) applyTheme('');
-  else keepHighlightLegible();
+// Ctrl+D: the family's variant in the other mode, or Gruvbox's when the
+// family has only one mode.
+function toggleMode() {
+  const dark = isDark();
+  const variants = themeList.families.flatMap((f) => f.variants.map((v) => ({ ...v, family: f.key })));
+  const current = variants.find((v) => v.slug === $root.dataset.colonyTheme);
+  const other = current && variants.find((v) => v.family === current.family && (v.mode === 'dark') !== dark);
+  prefs.theme = other ? other.slug : dark ? 'gruvbox-light' : 'gruvbox-dark';
+  savePreferences();
+  updateAppearance();
+}
 
-  select.addEventListener('change', () => applyTheme(select.value));
-  systemDark.addEventListener('change', () => {
-    if (!chosenTheme) applyTheme('');
-  });
-
-  fetch('vendor/colony/themes.json')
-    .then((response) => response.json())
-    .then(({ families }) => {
-      for (const family of families) {
-        for (const variant of family.variants) {
-          select.append(new Option(`${family.label.en} · ${variant.label.en}`, variant.slug));
-          themes.push({ slug: variant.slug, family: family.key, mode: variant.mode });
-        }
-      }
-      select.value = chosenTheme;
-    })
-    .catch((err) => console.error('Colony theme list unavailable:', err));
-});
+applyAppearance();
+// The accent override needs the theme list.
+themeListLoaded.then(() => { if (prefs.accent && !prefs.autoAccent) updateAppearance(); });
+systemDark.addEventListener('change', () => { if (!prefs.theme) updateAppearance(); });
+systemReducedMotion.addEventListener('change', applyAppearance);

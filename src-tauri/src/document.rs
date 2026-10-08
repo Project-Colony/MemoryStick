@@ -53,7 +53,7 @@ impl Opened {
 
     /// Reads the document the user just opened, or the one on screen again.
     /// A file that cannot be read leaves the one on screen in place.
-    fn read(&self) -> Result<Option<LoadedFile>, String> {
+    fn read(&self) -> Result<Option<LoadedFile>, Failure> {
         let path = {
             let mut docs = self.lock();
             docs.next.take().or_else(|| docs.shown.clone())
@@ -76,6 +76,27 @@ impl Opened {
     }
 }
 
+/// Why a document could not be read, for the page to say in the user's
+/// language: an error_* key of dist/i18n/, and what fills in its {detail}.
+#[derive(Debug, PartialEq, Serialize)]
+pub struct Failure {
+    key: &'static str,
+    detail: Option<String>,
+}
+
+impl Failure {
+    fn new(key: &'static str) -> Self {
+        Failure { key, detail: None }
+    }
+
+    fn with(key: &'static str, detail: impl ToString) -> Self {
+        Failure {
+            key,
+            detail: Some(detail.to_string()),
+        }
+    }
+}
+
 #[derive(Serialize)]
 pub struct LoadedFile {
     html: String,
@@ -85,12 +106,12 @@ pub struct LoadedFile {
 
 /// Reads a file. Refuses anything that is not a regular file (a device such
 /// as /dev/zero, a pipe, a folder) and files larger than MAX_FILE_SIZE.
-fn read_regular_file(path: &Path) -> Result<Vec<u8>, String> {
-    let too_large = || format!("The file is larger than {} MiB.", MAX_FILE_SIZE >> 20);
-    let cannot_read = |e: std::io::Error| format!("Cannot read the file: {e}");
+fn read_regular_file(path: &Path) -> Result<Vec<u8>, Failure> {
+    let too_large = || Failure::with("error_too_large", MAX_FILE_SIZE >> 20);
+    let cannot_read = |e: std::io::Error| Failure::with("error_cannot_read", e);
     let meta = std::fs::metadata(path).map_err(cannot_read)?;
     if !meta.is_file() {
-        return Err("This is not a regular file.".into());
+        return Err(Failure::new("error_not_a_file"));
     }
     if meta.len() > MAX_FILE_SIZE {
         return Err(too_large());
@@ -107,15 +128,15 @@ fn read_regular_file(path: &Path) -> Result<Vec<u8>, String> {
 }
 
 /// Reads a document: a Markdown or text file, as read_regular_file allows.
-fn read_document(path: &Path) -> Result<String, String> {
+fn read_document(path: &Path) -> Result<String, Failure> {
     let ext = path.extension().and_then(|e| e.to_str()).unwrap_or("");
     if !EXTENSIONS
         .iter()
         .any(|known| known.eq_ignore_ascii_case(ext))
     {
-        return Err("MemoryStick opens Markdown and text files only (.md, .markdown, .mdown, .mkd, .mkdn, .txt).".into());
+        return Err(Failure::new("error_not_markdown"));
     }
-    String::from_utf8(read_regular_file(path)?).map_err(|_| "The file is not UTF-8 text.".into())
+    String::from_utf8(read_regular_file(path)?).map_err(|_| Failure::new("error_not_utf8"))
 }
 
 /// Whether a path names a file on this device. On Windows that means a path
@@ -159,7 +180,7 @@ fn read_image(folder: &Path, uri_path: &str) -> Option<(&'static str, Vec<u8>)> 
     Some((content_type, read_regular_file(&path).ok()?))
 }
 
-fn load(path: &Path) -> Result<LoadedFile, String> {
+fn load(path: &Path) -> Result<LoadedFile, Failure> {
     Ok(LoadedFile {
         html: crate::markdown::render(&read_document(path)?),
         file_path: path.to_string_lossy().into_owned(),
@@ -179,7 +200,7 @@ pub async fn open_document<R: Runtime>(
     window: Window<R>,
     opened: State<'_, Opened>,
     all_files: String,
-) -> Result<Option<LoadedFile>, String> {
+) -> Result<Option<LoadedFile>, Failure> {
     let dialog = window
         .dialog()
         .file()
@@ -197,7 +218,7 @@ pub async fn open_document<R: Runtime>(
 /// Reads the document a drop or the command line opened, or the one on
 /// screen again (Ctrl+R). None when no document is open.
 #[tauri::command]
-pub async fn load_file(opened: State<'_, Opened>) -> Result<Option<LoadedFile>, String> {
+pub async fn load_file(opened: State<'_, Opened>) -> Result<Option<LoadedFile>, Failure> {
     opened.read()
 }
 

@@ -37,8 +37,9 @@ and a table of contents, from a single executable.
 - Syntax highlighting with highlight.js (its 36 common languages)
 - Math with KaTeX: `$...$`, `$$...$$` and ```` ```math ```` blocks
 - Mermaid diagrams
-- A table of contents panel built from the document's headings
-- Every Colony theme (Gruvbox, Catppuccin, Nord, Rosé Pine and the others): MemoryStick follows the system's light or dark mode in Gruvbox until you pick a theme in the toolbar
+- A table of contents panel built from the document's headings, which marks the section you are reading
+- Every Colony theme (Gruvbox, Catppuccin, Nord, Rosé Pine and the others): MemoryStick follows the system's light or dark mode in Gruvbox until you pick a theme
+- Preferences, behind the MemoryStick name in the toolbar as in every Colony program: theme, accent colour, text size, animations, high contrast, the OpenDyslexic font, reduced motion, and the interface in English or French
 - Images on your device shown from the document's folder and the folders inside it
 - Open a file with the Open button, by dropping it on the window, or by passing its path on the command line: `.md`, `.markdown`, `.mdown`, `.mkd`, `.mkdn` and `.txt` files of up to 32 MiB
 - Web and email links open in your browser or mail app; images hosted on the web are not loaded
@@ -51,7 +52,8 @@ memorystick notes.md
 |---|---|
 | Ctrl+O | Open a file |
 | Ctrl+D | Switch the theme between its light and dark variants |
-| Ctrl+R | Reload the current file |
+| Ctrl+R, F5 | Reload the current file |
+| Escape | Close Preferences |
 
 On macOS, use Cmd instead of Ctrl. [docs/sample.md](docs/sample.md) shows
 most of the features.
