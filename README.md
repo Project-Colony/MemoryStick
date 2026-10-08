@@ -34,11 +34,12 @@ and a table of contents, from a single executable.
 ## What it does
 
 - GitHub Flavored Markdown, rendered by [comrak](https://github.com/kivikakk/comrak): tables, task lists, strikethrough, autolinks, footnotes and description lists; a YAML front matter block is left out of the page
-- Syntax highlighting with highlight.js (its 36 common languages), in light and dark themes
+- Syntax highlighting with highlight.js (its 36 common languages)
 - Math with KaTeX: `$...$`, `$$...$$` and ```` ```math ```` blocks
 - Mermaid diagrams
-- A table of contents panel built from the document's headings
-- Dark mode
+- A table of contents panel built from the document's headings, which marks the section you are reading
+- Every Colony theme (Gruvbox, Catppuccin, Nord, Rosé Pine and the others): MemoryStick follows the system's light or dark mode in Gruvbox until you pick a theme
+- Preferences, behind the MemoryStick name in the toolbar as in every Colony program: theme, accent colour, text size, animations, high contrast, the OpenDyslexic font, reduced motion, and the interface in English or French
 - Images on your device shown from the document's folder and the folders inside it
 - Open a file with the Open button, by dropping it on the window, or by passing its path on the command line: `.md`, `.markdown`, `.mdown`, `.mkd`, `.mkdn` and `.txt` files of up to 32 MiB
 - Web and email links open in your browser or mail app; images hosted on the web are not loaded
@@ -50,8 +51,9 @@ memorystick notes.md
 | Shortcut | Action |
 |---|---|
 | Ctrl+O | Open a file |
-| Ctrl+D | Toggle dark mode |
-| Ctrl+R | Reload the current file |
+| Ctrl+D | Switch the theme between its light and dark variants |
+| Ctrl+R, F5 | Reload the current file |
+| Escape | Close Preferences |
 
 On macOS, use Cmd instead of Ctrl. [docs/sample.md](docs/sample.md) shows
 most of the features.
@@ -126,8 +128,14 @@ publishes them.
 ### Privacy policy
 
 MemoryStick has no account, telemetry, analytics, crash reporting or update
-check, and its own code makes no network requests. It keeps no history or
-settings of its own.
+check, and its own code makes no network requests. It keeps no history. Its
+preferences, such as the theme you pick, are a file on your device:
+`~/.config/Colony/MemoryStick/preferences/preferences.json` on Linux,
+`%LOCALAPPDATA%\Colony\MemoryStick\preferences\preferences.json` on
+Windows and
+`~/Library/Application Support/Colony/MemoryStick/preferences/preferences.json`
+on macOS. The web view that shows documents runs in private mode, so it
+keeps nothing between runs.
 
 MemoryStick reads only the files you open yourself, through its Open
 dialog, by dropping them on its window or by naming them on the command
@@ -161,6 +169,7 @@ of version 3 of the GNU General Public License, or (at your option) any later
 version. The full text is in [LICENSE](LICENSE).
 
 The libraries in `dist/vendor/` keep their own licences: BSD-3-Clause for
-highlight.js, MIT for KaTeX and Mermaid, OFL-1.1 for the KaTeX fonts, and
-those of the packages Mermaid's build contains. See
+highlight.js, MIT for KaTeX and Mermaid, OFL-1.1 for the KaTeX fonts,
+GPL-3.0-or-later for the Colony themes, and those of the packages Mermaid's
+build contains. The fonts in `dist/fonts/` are under OFL-1.1. See
 [docs/third-party-notices.md](docs/third-party-notices.md).

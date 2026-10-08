@@ -12,6 +12,7 @@
     "withGlobalTauri": true,
     "windows": [
       {
+        "create": false,
         "title": "MemoryStick",
         "width": 1150,
         "height": 820,
@@ -30,7 +31,7 @@
         "style-src": "'self' 'unsafe-inline'",
         "img-src": "'self' image: http://image.localhost data:",
         "font-src": "'self'",
-        "connect-src": "ipc: http://ipc.localhost",
+        "connect-src": "'self' ipc: http://ipc.localhost",
         "object-src": "'none'",
         "frame-src": "'none'",
         "base-uri": "'none'",
@@ -50,7 +51,7 @@
     ],
     "category": "Productivity",
     "shortDescription": "A Markdown viewer",
-    "longDescription": "A Markdown viewer with GitHub Flavored Markdown, syntax highlighting, KaTeX math, Mermaid diagrams, a table of contents and a dark mode.",
+    "longDescription": "A Markdown viewer with GitHub Flavored Markdown, syntax highlighting, KaTeX math, Mermaid diagrams, a table of contents and Colony's themes.",
     "fileAssociations": [
       {
         "ext": ["md", "markdown", "mdown", "mkd", "mkdn"],

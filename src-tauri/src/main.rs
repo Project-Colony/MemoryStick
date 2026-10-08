@@ -4,6 +4,7 @@
 mod document;
 mod markdown;
 mod navigation;
+mod preferences;
 
 use std::path::PathBuf;
 
@@ -53,9 +54,28 @@ fn main() {
         )
         .invoke_handler(tauri::generate_handler![
             document::open_document,
-            document::load_file
+            document::load_file,
+            preferences::save_preferences
         ])
         .on_window_event(document::on_window_event)
+        // The window is built here rather than from tauri.conf.json alone,
+        // which cannot place the web view's folder under Colony/MemoryStick.
+        // The web view runs private, so it keeps nothing there between
+        // runs: the preferences are a file of their own (preferences.rs).
+        .setup(|app| {
+            let config = app.config().app.windows[0].clone();
+            let window = tauri::WebviewWindowBuilder::from_config(app, &config)?
+                .incognito(true)
+                .initialization_script(preferences::init_script());
+            // macOS has no folder to choose: WebKit keeps its own.
+            #[cfg(not(target_os = "macos"))]
+            let window = match preferences::cache_dir() {
+                Some(dir) => window.data_directory(dir.join("webview")),
+                None => window,
+            };
+            window.build()?;
+            Ok(())
+        })
         .run(tauri::generate_context!())
         .expect("failed to start Tauri");
 }

@@ -14,7 +14,7 @@ Welcome to **MemoryStick**, a _complete_ Markdown viewer written in **Rust** wit
 - [x] Syntax highlighting (highlight.js, 36 common languages)
 - [x] Math (KaTeX)
 - [x] Mermaid diagrams
-- [x] Dark mode
+- [x] Colony themes
 - [ ] Coffee ☕
 
 ## Code

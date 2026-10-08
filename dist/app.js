@@ -8,20 +8,42 @@ window.addEventListener('error', (e) => {
   const el = document.getElementById('content') || document.body;
   if (el) {
     const pre = document.createElement('pre');
-    pre.style.cssText = 'color:#ff6b6b;padding:20px;white-space:pre-wrap;font-size:13px;background:#1a0000;border:1px solid #ff6b6b;margin:20px;';
-    pre.textContent = `JS Error: ${e.message}\nat ${e.filename}:${e.lineno}:${e.colno}`;
+    pre.className = 'error-box';
+    pre.textContent = t('error_interface', `${e.message}\n${e.filename}:${e.lineno}:${e.colno}`);
     el.prepend(pre);
   }
 });
 
 if (!window.__TAURI__) {
-  document.body.innerHTML = '<pre style="color:red;padding:40px">window.__TAURI__ is not available. Check withGlobalTauri: true in tauri.conf.json.</pre>';
+  document.body.innerHTML = '<pre style="color:var(--colony-error);padding:40px">window.__TAURI__ is not available. Check withGlobalTauri: true in tauri.conf.json.</pre>';
   throw new Error('Tauri API unavailable');
 }
 
 const invoke = window.__TAURI__.core.invoke;
 const convertFileSrc = window.__TAURI__.core.convertFileSrc;
 const listen = window.__TAURI__.event.listen;
+
+translate();
+
+// ===== Messages =====
+// A dismissible note at the bottom of the window: a confirmation, or an
+// error (announced at once to screen readers).
+const $toast = document.getElementById('toast');
+let toastTimer;
+function showToast(text, error = false) {
+  document.getElementById('toast-text').textContent = text;
+  $toast.classList.toggle('error', error);
+  $toast.setAttribute('role', error ? 'alert' : 'status');
+  $toast.hidden = false;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { $toast.hidden = true; }, error ? 8000 : 3000);
+}
+document.getElementById('toast-close').addEventListener('click', () => { $toast.hidden = true; });
+
+// A command's error: main.rs gives { key, detail } for a document.
+function failureText(err) {
+  return err && err.key ? t(err.key, err.detail ?? undefined) : String(err);
+}
 
 // ===== State =====
 let currentFilePath = null;
@@ -32,19 +54,62 @@ const $content = document.getElementById('content');
 const $filename = document.getElementById('filename');
 const $tocPanel = document.getElementById('toc-panel');
 const $tocNav = document.getElementById('toc-nav');
-const $themeBtn = document.getElementById('theme-btn');
-const $hljsLight = document.getElementById('hljs-light');
-const $hljsDark = document.getElementById('hljs-dark');
 
-// ===== Mermaid init =====
-if (window.mermaid) {
-  window.mermaid.initialize({
+// ===== Mermaid =====
+// Mermaid needs literal colours, so they are read from the theme (theme.js)
+// and the diagrams are redrawn when it changes. 'base' is the only Mermaid
+// theme that takes themeVariables. initialize() starts over from Mermaid's
+// defaults, so the whole configuration is passed every time.
+function mermaidConfig() {
+  return {
     startOnLoad: false,
-    theme: 'default',
     securityLevel: 'strict',
-    flowchart: { htmlLabels: true, curve: 'basis' }
+    flowchart: { htmlLabels: true, curve: 'basis' },
+    theme: 'base',
+    themeVariables: {
+      darkMode: isDark(),
+      background: cssVar('--colony-bg-primary'),
+      primaryColor: cssVar('--colony-bg-card'),
+      primaryTextColor: cssVar('--colony-text-primary'),
+      primaryBorderColor: cssVar('--colony-accent-blue'),
+      secondaryColor: cssVar('--colony-bg-card-hover'),
+      tertiaryColor: cssVar('--colony-bg-sidebar'),
+      lineColor: cssVar('--colony-text-muted'),
+      textColor: cssVar('--colony-text-primary'),
+      noteBkgColor: cssVar('--colony-bg-sidebar'),
+      noteTextColor: cssVar('--colony-text-primary'),
+      noteBorderColor: cssVar('--colony-border-subtle'),
+      fontFamily: getComputedStyle(document.body).fontFamily
+    }
+  };
+}
+
+async function renderMermaid() {
+  if (!window.mermaid) return;
+  // Mermaid measures its labels: with the font still loading, it would
+  // size them for a fallback font.
+  await document.fonts.ready;
+  $content.querySelectorAll('.mermaid').forEach(async (el, i) => {
+    const id = `mermaid-${Date.now()}-${i}`;
+    try {
+      const { svg } = await window.mermaid.render(id, el.dataset.source);
+      el.innerHTML = svg;
+    } catch (err) {
+      const pre = document.createElement('pre');
+      pre.className = 'error-box';
+      pre.textContent = t('error_diagram', String(err.message || err));
+      el.replaceChildren(pre);
+    }
   });
 }
+
+if (window.mermaid) window.mermaid.initialize(mermaidConfig());
+
+document.addEventListener('colony-theme-change', () => {
+  if (!window.mermaid) return;
+  window.mermaid.initialize(mermaidConfig());
+  renderMermaid();
+});
 
 // ===== HTML post-processing =====
 function dirname(p) {
@@ -90,6 +155,7 @@ function postProcess() {
       const div = document.createElement('div');
       div.className = 'mermaid';
       div.textContent = codeEl.textContent;
+      div.dataset.source = codeEl.textContent; // kept for redrawing
       pre.replaceWith(div);
       return;
     }
@@ -116,7 +182,7 @@ function postProcess() {
         const html = window.katex.renderToString(tex, {
           displayMode: display,
           throwOnError: false,
-          errorColor: '#cc0000',
+          errorColor: 'var(--colony-error)',
           strict: 'ignore'
         });
         // Replace the whole node (span or pre>code) with the KaTeX HTML
@@ -126,28 +192,13 @@ function postProcess() {
           el.outerHTML = html;
         }
       } catch (err) {
-        el.textContent = '⚠️ ' + err.message;
+        el.textContent = '\uf071 ' + err.message;
       }
     });
   }
 
   // 4) Mermaid render (after extraction)
-  if (window.mermaid) {
-    const blocks = $content.querySelectorAll('.mermaid');
-    blocks.forEach(async (el, i) => {
-      const code = el.textContent;
-      const id = `mermaid-${Date.now()}-${i}`;
-      try {
-        const { svg } = await window.mermaid.render(id, code);
-        el.innerHTML = svg;
-      } catch (err) {
-        const pre = document.createElement('pre');
-        pre.style.color = '#cc0000';
-        pre.textContent = `Mermaid error: ${String(err.message || err)}`;
-        el.replaceChildren(pre);
-      }
-    });
-  }
+  renderMermaid();
 
   // 5) Build the table of contents
   buildToc();
@@ -156,7 +207,10 @@ function postProcess() {
 function buildToc() {
   const headings = $content.querySelectorAll('h1, h2, h3, h4');
   if (headings.length === 0) {
-    $tocNav.innerHTML = '<em style="color:#8b949e;font-size:13px">No headings in this document</em>';
+    const empty = document.createElement('em');
+    empty.className = 'toc-empty';
+    empty.textContent = t('toc_empty');
+    $tocNav.replaceChildren(empty);
     return;
   }
   const root = document.createElement('ul');
@@ -171,10 +225,34 @@ function buildToc() {
     const a = document.createElement('a');
     a.textContent = h.textContent.trim();
     a.href = '#' + h.id;
+    a.dataset.heading = h.id;
     li.appendChild(a);
     root.appendChild(li);
   });
+  markCurrentHeading();
 }
+
+// The table of contents marks the section being read: the last heading
+// that has scrolled up to the toolbar.
+function markCurrentHeading() {
+  const toolbarBottom = document.getElementById('toolbar').offsetHeight + 30;
+  let current = null;
+  for (const a of $tocNav.querySelectorAll('a')) {
+    const heading = document.getElementById(a.dataset.heading);
+    if (!heading || heading.getBoundingClientRect().top > toolbarBottom) break;
+    current = a;
+  }
+  $tocNav.querySelectorAll('a').forEach((a) => {
+    if (a === current) a.setAttribute('aria-current', 'location');
+    else a.removeAttribute('aria-current');
+  });
+}
+let markPending = false;
+window.addEventListener('scroll', () => {
+  if (markPending) return;
+  markPending = true;
+  requestAnimationFrame(() => { markPending = false; markCurrentHeading(); });
+}, { passive: true });
 
 // ===== Links =====
 // What a click on a link does. A web or mail link opens in the default
@@ -213,13 +291,15 @@ document.addEventListener('click', (e) => {
   const action = linkAction(href, location.href);
   if (action && action.open) {
     invoke('plugin:opener|open_url', { url: action.open })
-      .catch((err) => alert('Cannot open the link: ' + err));
+      .catch((err) => showToast(t('error_cannot_open_link', err), true));
   } else if (action) {
     // comrak gives a heading's anchor the id "h-name", while links to the
     // heading, as on GitHub, are written "#name"
     const target = document.getElementById(action.scrollTo)
       || document.getElementById('h-' + action.scrollTo);
-    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    // Smooth unless motion is off (theme.js sets data-still).
+    const behavior = $root.hasAttribute('data-still') ? 'auto' : 'smooth';
+    if (target) target.scrollIntoView({ behavior, block: 'start' });
   }
 }, true);
 
@@ -239,6 +319,9 @@ function render(result) {
   doc.content.querySelectorAll('meta, link').forEach((el) => el.remove());
   $content.replaceChildren(doc.content);
   $main.classList.add('has-content');
+  // A document takes the window back from Preferences.
+  if (document.body.classList.contains('prefs-open')) togglePreferences(false);
+  delete $filename.dataset.i18n; // a file name, not interface text
   $filename.textContent = result.file_name;
   document.title = `${result.file_name} - MemoryStick`;
 
@@ -252,17 +335,17 @@ async function loadAndRender() {
     const result = await invoke('load_file');
     if (result) render(result);
   } catch (err) {
-    alert('Error: ' + err);
+    showToast(failureText(err), true);
   }
 }
 
 // ===== UI handlers =====
 document.getElementById('open-btn').addEventListener('click', async () => {
   try {
-    const result = await invoke('open_document', { allFiles: 'All files' });
+    const result = await invoke('open_document', { allFiles: t('dialog_all_files') });
     if (result) render(result);
   } catch (err) {
-    alert('Error: ' + err);
+    showToast(failureText(err), true);
   }
 });
 
@@ -271,23 +354,6 @@ document.getElementById('toc-btn').addEventListener('click', () => {
   $tocPanel.classList.toggle('hidden');
 });
 
-function toggleTheme() {
-  const isDark = document.body.classList.toggle('dark');
-  $themeBtn.textContent = isDark ? '☀️' : '🌙';
-  $hljsDark.disabled = !isDark;
-  $hljsLight.disabled = isDark;
-  if (window.mermaid) {
-    window.mermaid.initialize({
-      startOnLoad: false,
-      theme: isDark ? 'dark' : 'default',
-      securityLevel: 'strict'
-    });
-    if (currentFilePath) loadAndRender();
-  }
-}
-
-$themeBtn.addEventListener('click', toggleTheme);
-
 // Keyboard shortcuts
 document.addEventListener('keydown', (e) => {
   if ((e.ctrlKey || e.metaKey) && e.key === 'o') {
@@ -295,8 +361,10 @@ document.addEventListener('keydown', (e) => {
     document.getElementById('open-btn').click();
   } else if ((e.ctrlKey || e.metaKey) && e.key === 'd') {
     e.preventDefault();
-    toggleTheme();
-  } else if ((e.ctrlKey || e.metaKey) && e.key === 'r') {
+    toggleMode();
+  } else if (((e.ctrlKey || e.metaKey) && e.key === 'r') || e.key === 'F5') {
+    // F5 too: reloading the page would bring back the preferences as they
+    // were when MemoryStick started.
     e.preventDefault();
     if (currentFilePath) loadAndRender();
   }
