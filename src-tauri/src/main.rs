@@ -39,6 +39,13 @@ fn load_file(path: String) -> Result<LoadedFile, String> {
 }
 
 fn main() {
+    // Answered before any window exists, so the release workflow can run the
+    // binary on a runner without a display.
+    if std::env::args().nth(1).as_deref() == Some("--version") {
+        println!("{} {}", env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"));
+        return;
+    }
+
     // Workarounds for webkit2gtk >= 2.44 on Linux (Wayland/XWayland):
     // - the DMA-BUF renderer allocates invalid GBM buffers, giving a blank page
     // - compositing mode is sometimes broken on Wayland
