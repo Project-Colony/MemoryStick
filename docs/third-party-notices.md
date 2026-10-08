@@ -11,6 +11,7 @@ build.
 | KaTeX | 0.19.0 | MIT | `dist/vendor/katex/katex.min.js`, `katex.min.css` ([LICENSE](../dist/vendor/katex/LICENSE)) | https://github.com/KaTeX/KaTeX |
 | KaTeX fonts | 0.19.0 | OFL-1.1 | `dist/vendor/katex/fonts/` (notice in each font file, licence text in [LICENSE](../dist/vendor/katex/LICENSE)) | https://github.com/KaTeX/KaTeX |
 | Mermaid | 11.17.2 | MIT | `dist/vendor/mermaid/mermaid.min.js` ([LICENSE](../dist/vendor/mermaid/LICENSE)) | https://github.com/mermaid-js/mermaid |
+| Colony themes | Project-Colony-Resources `edc7495` (colony-ui 0.1.5) | GPL-3.0-or-later, like MemoryStick | `dist/vendor/colony/` ([README](../dist/vendor/colony/README.md)) | https://github.com/Project-Colony/Project-Colony-Resources |
 
 `mermaid.min.js` is a single-file build that also contains 79 npm package
 versions: d3 and its modules (ISC, five of them BSD-3-Clause), DOMPurify
