@@ -186,6 +186,9 @@ function buildToc() {
 // browser or mail app, a link to a place in this document scrolls to it,
 // and any other link does nothing: the window itself never navigates.
 // Returns { open: url }, { scrollTo: id } or null.
+// A mailto link may only fill in these fields: some mail apps have honoured
+// others, such as attach=, by attaching a file from the disk.
+const MAIL_FIELDS = ['to', 'cc', 'bcc', 'subject', 'body'];
 function linkAction(href, base) {
   try {
     const url = new URL(href, base);
@@ -194,7 +197,9 @@ function linkAction(href, base) {
       return { scrollTo: decodeURIComponent(url.hash.slice(1)) };
     }
     const web = (url.protocol === 'http:' || url.protocol === 'https:') && url.origin !== here.origin;
-    if (web || url.protocol === 'mailto:') return { open: url.href };
+    const mail = url.protocol === 'mailto:'
+      && [...url.searchParams.keys()].every((key) => MAIL_FIELDS.includes(key.toLowerCase()));
+    if (web || mail) return { open: url.href };
   } catch (_) {}
   return null;
 }
