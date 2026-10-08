@@ -39,7 +39,7 @@ and a table of contents, from a single executable.
 - Mermaid diagrams
 - A table of contents panel built from the document's headings
 - Dark mode
-- Relative images resolved from the document's folder
+- Images on your device shown from the document's folder and the folders inside it
 - Open a file with the Open button, by dropping it on the window, or by passing its path on the command line: `.md`, `.markdown`, `.mdown`, `.mkd`, `.mkdn` and `.txt` files of up to 32 MiB
 - Web and email links open in your browser or mail app
 
@@ -129,12 +129,15 @@ MemoryStick has no account, telemetry, analytics, crash reporting or update
 check, and its own code makes no network requests. It keeps no history or
 settings of its own.
 
-MemoryStick reads only the files you open, and only Markdown and text files
-(`.md`, `.markdown`, `.mdown`, `.mkd`, `.mkdn` and `.txt`), plus the images
-on your device that those documents show (PNG, JPEG, GIF, WebP, AVIF, SVG,
-BMP and ICO files). A document cannot make it open a network share by its
-address, such as `\\server\share` on Windows. It does not upload, copy or
-keep these files.
+MemoryStick reads only the files you open yourself, through its Open
+dialog, by dropping them on its window or by naming them on the command
+line, and only Markdown and text files (`.md`, `.markdown`, `.mdown`,
+`.mkd`, `.mkdn` and `.txt`). It also reads the images a document shows
+(PNG, JPEG, GIF, WebP, AVIF, SVG, BMP and ICO files), but only from that
+document's folder and the folders inside it. A document cannot make it open
+any other file, or a network share by its address, such as
+`\\server\share` on Windows. It does not upload, copy or keep these
+files.
 
 Documents can contain HTML, which is displayed, but no script contained in a
 document is ever run. The window always shows MemoryStick's own page: nothing

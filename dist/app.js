@@ -1,7 +1,7 @@
 // MemoryStick frontend (Tauri v2)
 // The Tauri bindings are exposed through withGlobalTauri: true.
-// Plugins (dialog, opener) are NOT attached to window.__TAURI__ automatically,
-// so they are called through invoke('plugin:NAME|COMMAND', args).
+// Plugins (opener) are NOT attached to window.__TAURI__ automatically, so
+// they are called through invoke('plugin:NAME|COMMAND', args).
 
 // Show any error right in the page (debugging aid)
 window.addEventListener('error', (e) => {
@@ -22,11 +22,6 @@ if (!window.__TAURI__) {
 const invoke = window.__TAURI__.core.invoke;
 const convertFileSrc = window.__TAURI__.core.convertFileSrc;
 const listen = window.__TAURI__.event.listen;
-
-// dialog.open, through a direct invoke on the plugin
-async function openDialog(options) {
-  return await invoke('plugin:dialog|open', { options });
-}
 
 // ===== State =====
 let currentFilePath = null;
@@ -229,26 +224,33 @@ document.addEventListener('click', (e) => {
 }, true);
 
 // ===== Rendering =====
-async function loadAndRender(filePath) {
+// The page never names a file: main.rs reads only the document the user
+// opened, through the Open dialog, a drop or the command line.
+function render(result) {
+  currentFilePath = result.file_path;
+  currentDir = dirname(currentFilePath);
+
+  // Parsed in an inert <template> first, so that the document's <meta>
+  // elements (a refresh tag navigates the window) and <link> elements
+  // (preconnect and prefetch hints reach the network) are dropped before
+  // the page ever sees them.
+  const doc = document.createElement('template');
+  doc.innerHTML = result.html;
+  doc.content.querySelectorAll('meta, link').forEach((el) => el.remove());
+  $content.replaceChildren(doc.content);
+  $main.classList.add('has-content');
+  $filename.textContent = result.file_name;
+  document.title = `${result.file_name} - MemoryStick`;
+
+  postProcess();
+  window.scrollTo(0, 0);
+}
+
+// Loads the opened document, if there is one.
+async function loadAndRender() {
   try {
-    const result = await invoke('load_file', { path: filePath });
-    currentFilePath = result.file_path;
-    currentDir = dirname(currentFilePath);
-
-    // Parsed in an inert <template> first, so that the document's <meta>
-    // elements (a refresh tag navigates the window) and <link> elements
-    // (preconnect and prefetch hints reach the network) are dropped before
-    // the page ever sees them.
-    const doc = document.createElement('template');
-    doc.innerHTML = result.html;
-    doc.content.querySelectorAll('meta, link').forEach((el) => el.remove());
-    $content.replaceChildren(doc.content);
-    $main.classList.add('has-content');
-    $filename.textContent = result.file_name;
-    document.title = `${result.file_name} - MemoryStick`;
-
-    postProcess();
-    window.scrollTo(0, 0);
+    const result = await invoke('load_file');
+    if (result) render(result);
   } catch (err) {
     alert('Error: ' + err);
   }
@@ -257,24 +259,10 @@ async function loadAndRender(filePath) {
 // ===== UI handlers =====
 document.getElementById('open-btn').addEventListener('click', async () => {
   try {
-    const selected = await openDialog({
-      multiple: false,
-      // The same list as EXTENSIONS in main.rs, which refuses other files.
-      // "All files" stays because GTK matches these patterns case-sensitively,
-      // so on Linux README.MD only shows there.
-      filters: [
-        { name: 'Markdown', extensions: ['md', 'markdown', 'mdown', 'mkd', 'mkdn', 'txt'] },
-        { name: 'All files', extensions: ['*'] }
-      ]
-    });
-    // The Tauri dialog plugin returns a string (or null/undefined when cancelled)
-    if (selected && typeof selected === 'string') {
-      loadAndRender(selected);
-    } else if (selected && typeof selected === 'object' && selected.path) {
-      loadAndRender(selected.path);
-    }
+    const result = await invoke('open_document', { allFiles: 'All files' });
+    if (result) render(result);
   } catch (err) {
-    alert('Dialog error: ' + err);
+    alert('Error: ' + err);
   }
 });
 
@@ -294,7 +282,7 @@ function toggleTheme() {
       theme: isDark ? 'dark' : 'default',
       securityLevel: 'strict'
     });
-    if (currentFilePath) loadAndRender(currentFilePath);
+    if (currentFilePath) loadAndRender();
   }
 }
 
@@ -310,7 +298,7 @@ document.addEventListener('keydown', (e) => {
     toggleTheme();
   } else if ((e.ctrlKey || e.metaKey) && e.key === 'r') {
     e.preventDefault();
-    if (currentFilePath) loadAndRender(currentFilePath);
+    if (currentFilePath) loadAndRender();
   }
 });
 
@@ -321,19 +309,15 @@ listen('tauri://drag-enter', () => {
 listen('tauri://drag-leave', () => {
   document.body.classList.remove('drag-over');
 });
-listen('tauri://drag-drop', (event) => {
+listen('tauri://drag-drop', () => {
   document.body.classList.remove('drag-over');
-  const paths = event.payload?.paths || [];
-  if (paths.length > 0) {
-    loadAndRender(paths[0]);
-  }
 });
+// main.rs takes the dropped file as the opened document, then says so.
+listen('document-opened', loadAndRender);
 
 // Block the standard web drop, which would navigate away
 window.addEventListener('dragover', (e) => e.preventDefault());
 window.addEventListener('drop', (e) => e.preventDefault());
 
-// ===== File passed as an argument (double-click) =====
-listen('open-file-path', (event) => {
-  if (event.payload) loadAndRender(event.payload);
-});
+// ===== A file named on the command line (double-click) =====
+loadAndRender();

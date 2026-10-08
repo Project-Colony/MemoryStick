@@ -5,7 +5,7 @@
   "windows": ["main"],
   "permissions": [
     "core:event:allow-listen",
-    "dialog:allow-open",
+    "allow-open-document",
     "allow-load-file",
     {
       "identifier": "opener:allow-open-url",
