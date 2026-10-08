@@ -198,9 +198,13 @@ function linkAction(href, base) {
 }
 
 // One handler for every link, including those added after rendering
-// (Mermaid diagrams, the table of contents) and <area> elements.
+// (Mermaid diagrams, the table of contents) and <area> elements. It runs in
+// the capture phase, before anything inside the page, and it calls
+// Element.prototype.closest rather than e.target.closest: a <form> in a
+// document can shadow its own closest with a field named "closest", and a
+// handler that throws would let the browser follow the link.
 document.addEventListener('click', (e) => {
-  const link = e.target.closest && e.target.closest('a, area');
+  const link = e.target instanceof Element && Element.prototype.closest.call(e.target, 'a, area');
   if (!link) return;
   e.preventDefault();
   const href = link.getAttribute('href') ?? link.getAttribute('xlink:href') ?? '';
@@ -215,7 +219,7 @@ document.addEventListener('click', (e) => {
       || document.getElementById('h-' + action.scrollTo);
     if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
-});
+}, true);
 
 // ===== Rendering =====
 async function loadAndRender(filePath) {
