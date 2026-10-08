@@ -46,7 +46,7 @@ if (window.mermaid) {
   window.mermaid.initialize({
     startOnLoad: false,
     theme: 'default',
-    securityLevel: 'loose',
+    securityLevel: 'strict',
     flowchart: { htmlLabels: true, curve: 'basis' }
   });
 }
@@ -144,7 +144,10 @@ function postProcess() {
         const { svg } = await window.mermaid.render(id, code);
         el.innerHTML = svg;
       } catch (err) {
-        el.innerHTML = `<pre style="color:#cc0000">Mermaid error: ${String(err.message || err)}</pre>`;
+        const pre = document.createElement('pre');
+        pre.style.color = '#cc0000';
+        pre.textContent = `Mermaid error: ${String(err.message || err)}`;
+        el.replaceChildren(pre);
       }
     });
   }
@@ -268,7 +271,7 @@ function toggleTheme() {
     window.mermaid.initialize({
       startOnLoad: false,
       theme: isDark ? 'dark' : 'default',
-      securityLevel: 'loose'
+      securityLevel: 'strict'
     });
     if (currentFilePath) loadAndRender(currentFilePath);
   }
