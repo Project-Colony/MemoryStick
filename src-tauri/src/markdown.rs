@@ -1,4 +1,6 @@
-use comrak::{markdown_to_html, ExtensionOptionsBuilder, Options, ParseOptionsBuilder, RenderOptionsBuilder};
+use comrak::{
+    markdown_to_html, ExtensionOptionsBuilder, Options, ParseOptionsBuilder, RenderOptionsBuilder,
+};
 
 pub fn render(markdown: &str) -> String {
     let extension = ExtensionOptionsBuilder::default()
@@ -10,7 +12,7 @@ pub fn render(markdown: &str) -> String {
         .footnotes(true)
         .description_lists(true)
         .math_dollars(true) // $...$ and $$...$$ become data-math-style spans
-        .math_code(true)    // ```math becomes a math block
+        .math_code(true) // ```math becomes a math block
         .header_ids(Some("h-".to_string()))
         .front_matter_delimiter(Some("---".to_string()))
         .build()

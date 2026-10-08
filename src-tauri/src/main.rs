@@ -23,8 +23,7 @@ fn render_markdown(content: String) -> String {
 #[tauri::command]
 fn load_file(path: String) -> Result<LoadedFile, String> {
     let pb = PathBuf::from(&path);
-    let content = std::fs::read_to_string(&pb)
-        .map_err(|e| format!("Cannot read the file: {e}"))?;
+    let content = std::fs::read_to_string(&pb).map_err(|e| format!("Cannot read the file: {e}"))?;
     let html = markdown::render(&content);
     let file_name = pb
         .file_name()
