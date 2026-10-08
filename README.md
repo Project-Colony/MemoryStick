@@ -131,8 +131,10 @@ settings of its own.
 
 MemoryStick reads only the files you open, and only Markdown and text files
 (`.md`, `.markdown`, `.mdown`, `.mkd`, `.mkdn` and `.txt`), plus the images
-on your device that those documents show. It does not upload, copy or keep
-them.
+on your device that those documents show (PNG, JPEG, GIF, WebP, AVIF, SVG,
+BMP and ICO files). A document cannot make it open a network share by its
+address, such as `\\server\share` on Windows. It does not upload, copy or
+keep these files.
 
 Documents can contain HTML, which is displayed, but no script contained in a
 document is ever run. The window always shows MemoryStick's own page: nothing
@@ -146,8 +148,9 @@ they load as soon as the document is displayed, as they would in a browser.
 The servers hosting them receive your IP address and the time, and can tell
 that the document was opened. A document written for the purpose can also use
 them to learn part of the path of the folder it was opened from, such as your
-user name. Other content hosted on the web (style sheets, fonts, frames, audio
-and video) is never loaded.
+user name, and whether images it names exist on your device. Other content
+hosted on the web (style sheets, fonts, frames, audio and video) is never
+loaded.
 
 MemoryStick's interface is rendered by the operating system's web view
 (Microsoft Edge WebView2 on Windows, WebKit on macOS and Linux), which follows

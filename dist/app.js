@@ -76,8 +76,10 @@ function postProcess() {
     $content.querySelectorAll('img').forEach(img => {
       const src = img.getAttribute('src') || '';
       if (!src) return;
-      if (/^(https?:|data:|blob:|asset:|file:)/i.test(src)) return;
-      img.src = convertFileSrc(isAbsolute(src) ? src : joinPath(currentDir, src));
+      if (/^(https?:|data:|blob:|image:|file:)/i.test(src)) return;
+      // Served by the app's image protocol (main.rs), which reads images on
+      // this device only.
+      img.src = convertFileSrc(isAbsolute(src) ? src : joinPath(currentDir, src), 'image');
     });
   }
 

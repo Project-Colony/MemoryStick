@@ -30,7 +30,7 @@
         "style-src": "'self' 'unsafe-inline'",
         "img-src": [
           "https: http:",
-          "'self' asset: http://asset.localhost data:"
+          "'self' image: http://image.localhost data:"
         ],
         "font-src": "'self'",
         "connect-src": "ipc: http://ipc.localhost",
@@ -38,10 +38,6 @@
         "frame-src": "'none'",
         "base-uri": "'none'",
         "form-action": "'none'"
-      },
-      "assetProtocol": {
-        "enable": true,
-        "scope": ["**"]
       }
     }
   },
