@@ -116,3 +116,29 @@ jobs:
 
       - name: Build and test on the declared floor
         run: cargo test --locked
+
+  colony-themes:
+    name: Colony themes
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+        working-directory: .
+    env:
+      # The Project-Colony-Resources commit colony-ui 0.1.5 was published
+      # from. Bump it together with dist/vendor/colony/README.md.
+      COLONY_RESOURCES_REV: edc7495de15e75553b9203e85d58e4452be67b3a
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Vendored files match Project-Colony-Resources
+        run: |
+          base="https://raw.githubusercontent.com/Project-Colony/Project-Colony-Resources/$COLONY_RESOURCES_REV/generated"
+          curl -fsSL --retry 3 "$base/css/colony-themes.css" | cmp - dist/vendor/colony/colony-themes.css
+          curl -fsSL --retry 3 "$base/themes.json" | cmp - dist/vendor/colony/themes.json
+
+      - name: Every theme defines the colours dist/ uses
+        run: python3 .github/scripts/check-colony-themes.py
