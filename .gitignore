@@ -3,14 +3,14 @@ src-tauri/target/
 src-tauri/gen/schemas/
 **/*.rs.bk
 
-# Node (si un jour on ajoute un bundler)
+# Node (should a bundler ever be added)
 node_modules/
 
 # OS
 .DS_Store
 Thumbs.db
 
-# Éditeurs
+# Editors
 .vscode/
 .idea/
 *.swp

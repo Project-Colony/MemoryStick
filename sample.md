@@ -1,21 +1,21 @@
-# Démo MD Viewer
+# MemoryStick demo
 
-Bienvenue dans **MD Viewer** — une visionneuse Markdown _complète_ écrite en **Rust** avec Tauri.
+Welcome to **MemoryStick**, a _complete_ Markdown viewer written in **Rust** with Tauri.
 
-## Mise en forme
+## Formatting
 
-- **gras**, *italique*, ~~barré~~, `code inline`
-- [lien externe](https://example.com)
-- Autolink : https://github.com/MotherSphere/md-viewers
+- **bold**, *italic*, ~~strikethrough~~, `inline code`
+- [external link](https://example.com)
+- Autolink: https://github.com/Project-Colony/MemoryStick
 
-## Liste de tâches
+## Task list
 
-- [x] Support GFM complet (tableaux, task lists, strikethrough)
-- [x] Coloration syntaxique du code (highlight.js, 190+ langages)
-- [x] Formules mathématiques (KaTeX)
-- [x] Diagrammes Mermaid
-- [x] Mode sombre
-- [ ] Café ☕
+- [x] Full GFM support (tables, task lists, strikethrough)
+- [x] Syntax highlighting (highlight.js, 190+ languages)
+- [x] Math (KaTeX)
+- [x] Mermaid diagrams
+- [x] Dark mode
+- [ ] Coffee ☕
 
 ## Code
 
@@ -37,41 +37,41 @@ def fibonacci(n):
         a, b = b, a + b
 ```
 
-## Tableau
+## Table
 
-| Langue     | Note | Remarque          |
-|------------|:----:|-------------------|
-| Français   |  10  | Langue maternelle |
-| Anglais    |   8  | Fluent            |
-| Klingon    |   2  | En progrès        |
+| Language   | Score | Remark          |
+|------------|:-----:|-----------------|
+| French     |  10   | Native language |
+| English    |   8   | Fluent          |
+| Klingon    |   2   | Getting there   |
 
 ## Citation
 
-> La simplicité est la sophistication suprême.
-> — *Léonard de Vinci*
+> Simplicity is the ultimate sophistication.
+> - *Leonardo da Vinci*
 
-## Mathématiques
+## Math
 
-Inline : $E = mc^2$ et $\sum_{i=1}^{n} i = \frac{n(n+1)}{2}$.
+Inline: $E = mc^2$ and $\sum_{i=1}^{n} i = \frac{n(n+1)}{2}$.
 
-Bloc :
+Block:
 
 $$
 \int_{-\infty}^{\infty} e^{-x^2} \, dx = \sqrt{\pi}
 $$
 
-## Diagramme Mermaid
+## Mermaid diagram
 
 ```mermaid
 flowchart LR
-    A[Fichier .md] --> B{MD Viewer}
-    B --> C[Rendu HTML via comrak]
-    B --> D[TOC auto]
+    A[.md file] --> B{MemoryStick}
+    B --> C[HTML rendering with comrak]
+    B --> D[Automatic TOC]
     B --> E[Mermaid + KaTeX + hljs]
 ```
 
-## Note de bas de page
+## Footnote
 
-Voici une référence[^1].
+Here is a reference[^1].
 
-[^1]: Et voici la note elle-même.
+[^1]: And here is the note itself.

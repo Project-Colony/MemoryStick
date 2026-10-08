@@ -6,11 +6,11 @@ pub fn render(markdown: &str) -> String {
         .table(true)
         .autolink(true)
         .tasklist(true)
-        .superscript(false) // désactivé : conflit avec ^ en LaTeX/KaTeX
+        .superscript(false) // off: clashes with ^ in LaTeX/KaTeX
         .footnotes(true)
         .description_lists(true)
-        .math_dollars(true) // $...$ et $$...$$ → spans data-math-style
-        .math_code(true)    // ```math → bloc math
+        .math_dollars(true) // $...$ and $$...$$ become data-math-style spans
+        .math_code(true)    // ```math becomes a math block
         .header_ids(Some("h-".to_string()))
         .front_matter_delimiter(Some("---".to_string()))
         .build()

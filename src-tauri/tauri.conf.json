@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "MD Viewer",
+  "productName": "MemoryStick",
   "version": "1.0.0",
-  "identifier": "com.mothersphere.mdviewer",
+  "identifier": "com.memorystick.app",
   "build": {
     "frontendDist": "../dist",
     "devUrl": "http://localhost:1420",
@@ -13,7 +13,7 @@
     "withGlobalTauri": true,
     "windows": [
       {
-        "title": "MD Viewer",
+        "title": "MemoryStick",
         "width": 1150,
         "height": 820,
         "minWidth": 600,
@@ -43,13 +43,13 @@
       "icons/icon.ico"
     ],
     "category": "Productivity",
-    "shortDescription": "Visionneuse Markdown complète",
-    "longDescription": "Une visionneuse Markdown moderne et complète : GFM, code coloré, maths KaTeX, diagrammes Mermaid, TOC, mode sombre.",
+    "shortDescription": "A Markdown viewer",
+    "longDescription": "A Markdown viewer with GitHub Flavored Markdown, syntax highlighting, KaTeX math, Mermaid diagrams, a table of contents and a dark mode.",
     "fileAssociations": [
       {
         "ext": ["md", "markdown", "mdown", "mkd", "mkdn"],
         "name": "Markdown",
-        "description": "Fichier Markdown",
+        "description": "Markdown document",
         "role": "Viewer"
       }
     ]
