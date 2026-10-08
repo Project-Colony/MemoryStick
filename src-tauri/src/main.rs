@@ -33,6 +33,16 @@ fn load_file(path: String) -> Result<LoadedFile, String> {
     })
 }
 
+/// The app's own page: tauri://localhost on Linux and macOS,
+/// http://tauri.localhost on Windows.
+fn is_app_page(url: &tauri::Url) -> bool {
+    url.port().is_none()
+        && matches!(
+            (url.scheme(), url.host_str()),
+            ("tauri", Some("localhost")) | ("http", Some("tauri.localhost"))
+        )
+}
+
 fn main() {
     // Answered before any window exists, so the release workflow can run the
     // binary on a runner without a display.
@@ -56,6 +66,24 @@ fn main() {
     }
 
     tauri::Builder::default()
+        // The window only ever shows the app's own page. Every other
+        // navigation (a link, a form or a refresh tag in a document) is
+        // refused, so no other page can take the window and its access to
+        // the app's commands.
+        .plugin(
+            tauri::plugin::Builder::<tauri::Wry>::new("navigation-guard")
+                .on_navigation(|webview, url| {
+                    is_app_page(url)
+                        || (cfg!(debug_assertions)
+                            && webview
+                                .config()
+                                .build
+                                .dev_url
+                                .as_ref()
+                                .is_some_and(|dev| dev.origin() == url.origin()))
+                })
+                .build(),
+        )
         .plugin(tauri_plugin_dialog::init())
         .invoke_handler(tauri::generate_handler![load_file])
         .setup(|app| {
@@ -79,4 +107,33 @@ fn main() {
         })
         .run(tauri::generate_context!())
         .expect("failed to start Tauri");
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn only_the_app_page_is_an_app_page() {
+        for ok in [
+            "tauri://localhost",
+            "tauri://localhost/index.html#h-intro",
+            "http://tauri.localhost/",
+        ] {
+            assert!(is_app_page(&ok.parse().unwrap()), "{ok}");
+        }
+        for bad in [
+            "https://evil.example/",
+            "http://evil.example/y",
+            "http://tauri.localhost:8080/",
+            "https://tauri.localhost/",
+            "asset://localhost/%2Ftmp%2Fx.html",
+            "http://asset.localhost/x.html",
+            "file:///tmp/x.html",
+            "tauri://evil.example/",
+            "about:blank",
+        ] {
+            assert!(!is_app_page(&bad.parse().unwrap()), "{bad}");
+        }
+    }
 }
