@@ -1,42 +1,11 @@
 // No console window on Windows in release builds
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+mod document;
 mod markdown;
+mod navigation;
 
-use serde::Serialize;
 use std::path::PathBuf;
-use tauri::{Emitter, Manager};
-
-#[derive(Serialize)]
-struct LoadedFile {
-    content: String,
-    html: String,
-    file_path: String,
-    file_name: String,
-}
-
-#[tauri::command]
-fn render_markdown(content: String) -> String {
-    markdown::render(&content)
-}
-
-#[tauri::command]
-fn load_file(path: String) -> Result<LoadedFile, String> {
-    let pb = PathBuf::from(&path);
-    let content = std::fs::read_to_string(&pb).map_err(|e| format!("Cannot read the file: {e}"))?;
-    let html = markdown::render(&content);
-    let file_name = pb
-        .file_name()
-        .and_then(|n| n.to_str())
-        .unwrap_or("")
-        .to_string();
-    Ok(LoadedFile {
-        content,
-        html,
-        file_path: path,
-        file_name,
-    })
-}
 
 fn main() {
     // Answered before any window exists, so the release workflow can run the
@@ -60,29 +29,33 @@ fn main() {
         }
     }
 
+    // A file named on the command line (a double-click on Windows and
+    // Linux) is the opened document; the page loads it once it is ready.
+    let opened = document::Opened::default();
+    if let Some(path) = std::env::args_os()
+        .skip(1)
+        .find(|a| !a.to_string_lossy().starts_with("--"))
+    {
+        opened.open(PathBuf::from(path));
+    }
+
     tauri::Builder::default()
+        .manage(opened)
+        .plugin(navigation::guard())
+        .register_asynchronous_uri_scheme_protocol("image", document::serve_image)
         .plugin(tauri_plugin_dialog::init())
-        .plugin(tauri_plugin_fs::init())
-        .invoke_handler(tauri::generate_handler![render_markdown, load_file])
-        .setup(|app| {
-            // A file passed as an argument (double-click on Windows/Linux)
-            let args: Vec<String> = std::env::args().skip(1).collect();
-            if let Some(file_arg) = args.iter().find(|a| !a.starts_with("--")) {
-                let pb = PathBuf::from(file_arg);
-                if pb.is_file() {
-                    if let Some(window) = app.get_webview_window("main") {
-                        let path_str = pb.to_string_lossy().to_string();
-                        // Give the frontend a moment to get ready
-                        let win_clone = window.clone();
-                        std::thread::spawn(move || {
-                            std::thread::sleep(std::time::Duration::from_millis(400));
-                            let _ = win_clone.emit("open-file-path", path_str);
-                        });
-                    }
-                }
-            }
-            Ok(())
-        })
+        // Links are handled by one click handler in app.js, so the plugin's
+        // own link script is left out.
+        .plugin(
+            tauri_plugin_opener::Builder::new()
+                .open_js_links_on_click(false)
+                .build(),
+        )
+        .invoke_handler(tauri::generate_handler![
+            document::open_document,
+            document::load_file
+        ])
+        .on_window_event(document::on_window_event)
         .run(tauri::generate_context!())
         .expect("failed to start Tauri");
 }

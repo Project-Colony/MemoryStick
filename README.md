@@ -39,8 +39,9 @@ and a table of contents, from a single executable.
 - Mermaid diagrams
 - A table of contents panel built from the document's headings
 - Dark mode
-- Relative images resolved from the document's folder
-- Open a file with the Open button, by dropping it on the window, or by passing its path on the command line
+- Images on your device shown from the document's folder and the folders inside it
+- Open a file with the Open button, by dropping it on the window, or by passing its path on the command line: `.md`, `.markdown`, `.mdown`, `.mkd`, `.mkdn` and `.txt` files of up to 32 MiB
+- Web and email links open in your browser or mail app; images hosted on the web are not loaded
 
 ```bash
 memorystick notes.md
@@ -128,12 +129,26 @@ MemoryStick has no account, telemetry, analytics, crash reporting or update
 check, and its own code makes no network requests. It keeps no history or
 settings of its own.
 
-A document can point to content on the web, and MemoryStick displays it the
-way a browser would: when a document you open contains images hosted on the
-web, they load as soon as the document is shown, and the servers hosting them
-receive your IP address and can tell that the document was opened. Documents
-can also contain HTML, which is displayed without filtering, so only open
-documents from sources you trust.
+MemoryStick reads only the files you open yourself, through its Open
+dialog, by dropping them on its window or by naming them on the command
+line, and only Markdown and text files (`.md`, `.markdown`, `.mdown`,
+`.mkd`, `.mkdn` and `.txt`). It also reads the images a document shows
+(PNG, JPEG, GIF, WebP, AVIF, SVG, BMP and ICO files), but only from that
+document's folder and the folders inside it. A document cannot make it open
+any other file, or a network share by its address, such as
+`\\server\share` on Windows. It does not upload, copy or keep these
+files.
+
+Documents can contain HTML, which is displayed, but no script contained in a
+document is ever run. The window always shows MemoryStick's own page: nothing
+in a document can navigate it to another page or file. Web and email links
+open in your default browser or mail app, and only when you click them;
+links to a place in the document scroll to it, and other links do nothing.
+
+Nothing in a document can make MemoryStick reach the network: images,
+style sheets, fonts, frames, audio and video hosted on the web are never
+loaded, so a document shows an image only when it is on your device. A web
+link reaches the network only through your browser, once you click it.
 
 MemoryStick's interface is rendered by the operating system's web view
 (Microsoft Edge WebView2 on Windows, WebKit on macOS and Linux), which follows

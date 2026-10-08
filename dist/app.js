@@ -1,7 +1,7 @@
 // MemoryStick frontend (Tauri v2)
 // The Tauri bindings are exposed through withGlobalTauri: true.
-// Plugins (dialog, fs) are NOT attached to window.__TAURI__ automatically,
-// so they are called through invoke('plugin:NAME|COMMAND', args).
+// Plugins (opener) are NOT attached to window.__TAURI__ automatically, so
+// they are called through invoke('plugin:NAME|COMMAND', args).
 
 // Show any error right in the page (debugging aid)
 window.addEventListener('error', (e) => {
@@ -23,11 +23,6 @@ const invoke = window.__TAURI__.core.invoke;
 const convertFileSrc = window.__TAURI__.core.convertFileSrc;
 const listen = window.__TAURI__.event.listen;
 
-// dialog.open, through a direct invoke on the plugin
-async function openDialog(options) {
-  return await invoke('plugin:dialog|open', { options });
-}
-
 // ===== State =====
 let currentFilePath = null;
 let currentDir = null;
@@ -46,7 +41,7 @@ if (window.mermaid) {
   window.mermaid.initialize({
     startOnLoad: false,
     theme: 'default',
-    securityLevel: 'loose',
+    securityLevel: 'strict',
     flowchart: { htmlLabels: true, curve: 'basis' }
   });
 }
@@ -69,18 +64,17 @@ function isAbsolute(p) {
 }
 
 function postProcess() {
-  // 1) Relative images: convertFileSrc(absolute path)
+  // 1) Relative images: convertFileSrc(absolute path). Other sources are
+  //    left as they are; whether a web (http, https) image loads is up to
+  //    img-src in the CSP (src-tauri/tauri.conf.json).
   if (currentDir) {
     $content.querySelectorAll('img').forEach(img => {
       const src = img.getAttribute('src') || '';
       if (!src) return;
-      if (/^(https?:|data:|blob:|asset:|file:)/i.test(src)) return;
-      const absolute = isAbsolute(src) ? src : joinPath(currentDir, src);
-      try {
-        img.src = convertFileSrc(absolute);
-      } catch (_) {
-        img.src = 'file://' + absolute;
-      }
+      if (/^(https?:|data:|blob:|image:|file:)/i.test(src)) return;
+      // Served by the app's image protocol (main.rs), which reads images on
+      // this device only.
+      img.src = convertFileSrc(isAbsolute(src) ? src : joinPath(currentDir, src), 'image');
     });
   }
 
@@ -147,27 +141,15 @@ function postProcess() {
         const { svg } = await window.mermaid.render(id, code);
         el.innerHTML = svg;
       } catch (err) {
-        el.innerHTML = `<pre style="color:#cc0000">Mermaid error: ${String(err.message || err)}</pre>`;
+        const pre = document.createElement('pre');
+        pre.style.color = '#cc0000';
+        pre.textContent = `Mermaid error: ${String(err.message || err)}`;
+        el.replaceChildren(pre);
       }
     });
   }
 
-  // 5) External links: default browser
-  $content.querySelectorAll('a[href]').forEach(a => {
-    const href = a.getAttribute('href') || '';
-    if (/^https?:\/\//i.test(href)) {
-      a.setAttribute('target', '_blank');
-      a.setAttribute('rel', 'noopener noreferrer');
-    } else if (href.startsWith('#')) {
-      a.addEventListener('click', (e) => {
-        e.preventDefault();
-        const target = document.getElementById(href.substring(1));
-        if (target) target.scrollIntoView({ behavior: 'smooth' });
-      });
-    }
-  });
-
-  // 6) Build the table of contents
+  // 5) Build the table of contents
   buildToc();
 }
 
@@ -189,29 +171,86 @@ function buildToc() {
     const a = document.createElement('a');
     a.textContent = h.textContent.trim();
     a.href = '#' + h.id;
-    a.addEventListener('click', (e) => {
-      e.preventDefault();
-      h.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    });
     li.appendChild(a);
     root.appendChild(li);
   });
 }
 
-// ===== Rendering =====
-async function loadAndRender(filePath) {
+// ===== Links =====
+// What a click on a link does. A web or mail link opens in the default
+// browser or mail app, a link to a place in this document scrolls to it,
+// and any other link does nothing: the window itself never navigates.
+// Returns { open: url }, { scrollTo: id } or null.
+// A mailto link may only fill in these fields: some mail apps have honoured
+// others, such as attach=, by attaching a file from the disk.
+const MAIL_FIELDS = ['to', 'cc', 'bcc', 'subject', 'body'];
+function linkAction(href, base) {
   try {
-    const result = await invoke('load_file', { path: filePath });
-    currentFilePath = result.file_path;
-    currentDir = dirname(currentFilePath);
+    const url = new URL(href, base);
+    const here = new URL(base);
+    if (url.hash && url.href.split('#')[0] === here.href.split('#')[0]) {
+      return { scrollTo: decodeURIComponent(url.hash.slice(1)) };
+    }
+    const web = (url.protocol === 'http:' || url.protocol === 'https:') && url.origin !== here.origin;
+    const mail = url.protocol === 'mailto:'
+      && [...url.searchParams.keys()].every((key) => MAIL_FIELDS.includes(key.toLowerCase()));
+    if (web || mail) return { open: url.href };
+  } catch (_) {}
+  return null;
+}
 
-    $content.innerHTML = result.html;
-    $main.classList.add('has-content');
-    $filename.textContent = result.file_name;
-    document.title = `${result.file_name} - MemoryStick`;
+// One handler for every link, including those added after rendering
+// (Mermaid diagrams, the table of contents) and <area> elements. It runs in
+// the capture phase, before anything inside the page, and it calls
+// Element.prototype.closest rather than e.target.closest: a <form> in a
+// document can shadow its own closest with a field named "closest", and a
+// handler that throws would let the browser follow the link.
+document.addEventListener('click', (e) => {
+  const link = e.target instanceof Element && Element.prototype.closest.call(e.target, 'a, area');
+  if (!link) return;
+  e.preventDefault();
+  const href = link.getAttribute('href') ?? link.getAttribute('xlink:href') ?? '';
+  const action = linkAction(href, location.href);
+  if (action && action.open) {
+    invoke('plugin:opener|open_url', { url: action.open })
+      .catch((err) => alert('Cannot open the link: ' + err));
+  } else if (action) {
+    // comrak gives a heading's anchor the id "h-name", while links to the
+    // heading, as on GitHub, are written "#name"
+    const target = document.getElementById(action.scrollTo)
+      || document.getElementById('h-' + action.scrollTo);
+    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+}, true);
 
-    postProcess();
-    window.scrollTo(0, 0);
+// ===== Rendering =====
+// The page never names a file: main.rs reads only the document the user
+// opened, through the Open dialog, a drop or the command line.
+function render(result) {
+  currentFilePath = result.file_path;
+  currentDir = dirname(currentFilePath);
+
+  // Parsed in an inert <template> first, so that the document's <meta>
+  // elements (a refresh tag navigates the window) and <link> elements
+  // (preconnect and prefetch hints reach the network) are dropped before
+  // the page ever sees them.
+  const doc = document.createElement('template');
+  doc.innerHTML = result.html;
+  doc.content.querySelectorAll('meta, link').forEach((el) => el.remove());
+  $content.replaceChildren(doc.content);
+  $main.classList.add('has-content');
+  $filename.textContent = result.file_name;
+  document.title = `${result.file_name} - MemoryStick`;
+
+  postProcess();
+  window.scrollTo(0, 0);
+}
+
+// Loads the opened document, if there is one.
+async function loadAndRender() {
+  try {
+    const result = await invoke('load_file');
+    if (result) render(result);
   } catch (err) {
     alert('Error: ' + err);
   }
@@ -220,21 +259,10 @@ async function loadAndRender(filePath) {
 // ===== UI handlers =====
 document.getElementById('open-btn').addEventListener('click', async () => {
   try {
-    const selected = await openDialog({
-      multiple: false,
-      filters: [
-        { name: 'Markdown', extensions: ['md', 'markdown', 'mdown', 'mkd', 'mkdn', 'txt'] },
-        { name: 'All files', extensions: ['*'] }
-      ]
-    });
-    // The Tauri dialog plugin returns a string (or null/undefined when cancelled)
-    if (selected && typeof selected === 'string') {
-      loadAndRender(selected);
-    } else if (selected && typeof selected === 'object' && selected.path) {
-      loadAndRender(selected.path);
-    }
+    const result = await invoke('open_document', { allFiles: 'All files' });
+    if (result) render(result);
   } catch (err) {
-    alert('Dialog error: ' + err);
+    alert('Error: ' + err);
   }
 });
 
@@ -252,9 +280,9 @@ function toggleTheme() {
     window.mermaid.initialize({
       startOnLoad: false,
       theme: isDark ? 'dark' : 'default',
-      securityLevel: 'loose'
+      securityLevel: 'strict'
     });
-    if (currentFilePath) loadAndRender(currentFilePath);
+    if (currentFilePath) loadAndRender();
   }
 }
 
@@ -270,7 +298,7 @@ document.addEventListener('keydown', (e) => {
     toggleTheme();
   } else if ((e.ctrlKey || e.metaKey) && e.key === 'r') {
     e.preventDefault();
-    if (currentFilePath) loadAndRender(currentFilePath);
+    if (currentFilePath) loadAndRender();
   }
 });
 
@@ -281,19 +309,15 @@ listen('tauri://drag-enter', () => {
 listen('tauri://drag-leave', () => {
   document.body.classList.remove('drag-over');
 });
-listen('tauri://drag-drop', (event) => {
+listen('tauri://drag-drop', () => {
   document.body.classList.remove('drag-over');
-  const paths = event.payload?.paths || [];
-  if (paths.length > 0) {
-    loadAndRender(paths[0]);
-  }
 });
+// main.rs takes the dropped file as the opened document, then says so.
+listen('document-opened', loadAndRender);
 
 // Block the standard web drop, which would navigate away
 window.addEventListener('dragover', (e) => e.preventDefault());
 window.addEventListener('drop', (e) => e.preventDefault());
 
-// ===== File passed as an argument (double-click) =====
-listen('open-file-path', (event) => {
-  if (event.payload) loadAndRender(event.payload);
-});
+// ===== A file named on the command line (double-click) =====
+loadAndRender();

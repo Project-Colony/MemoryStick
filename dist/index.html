@@ -3,6 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="x-dns-prefetch-control" content="off">
+  <!-- No <style> element here: Tauri would give it a nonce in style-src,
+       and the web view would then ignore the 'unsafe-inline' that KaTeX and
+       Mermaid need for their inline styles. The policy is "csp" in
+       src-tauri/tauri.conf.json. -->
   <title>MemoryStick</title>
   <link rel="stylesheet" href="vendor/highlight/github.min.css" id="hljs-light">
   <link rel="stylesheet" href="vendor/highlight/github-dark.min.css" id="hljs-dark" disabled>
