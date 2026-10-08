@@ -16,11 +16,6 @@ struct LoadedFile {
 }
 
 #[tauri::command]
-fn render_markdown(content: String) -> String {
-    markdown::render(&content)
-}
-
-#[tauri::command]
 fn load_file(path: String) -> Result<LoadedFile, String> {
     let pb = PathBuf::from(&path);
     let content = std::fs::read_to_string(&pb).map_err(|e| format!("Cannot read the file: {e}"))?;
@@ -62,8 +57,7 @@ fn main() {
 
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
-        .plugin(tauri_plugin_fs::init())
-        .invoke_handler(tauri::generate_handler![render_markdown, load_file])
+        .invoke_handler(tauri::generate_handler![load_file])
         .setup(|app| {
             // A file passed as an argument (double-click on Windows/Linux)
             let args: Vec<String> = std::env::args().skip(1).collect();

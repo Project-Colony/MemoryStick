@@ -1,6 +1,6 @@
 // MemoryStick frontend (Tauri v2)
 // The Tauri bindings are exposed through withGlobalTauri: true.
-// Plugins (dialog, fs) are NOT attached to window.__TAURI__ automatically,
+// Plugins (dialog) are NOT attached to window.__TAURI__ automatically,
 // so they are called through invoke('plugin:NAME|COMMAND', args).
 
 // Show any error right in the page (debugging aid)
