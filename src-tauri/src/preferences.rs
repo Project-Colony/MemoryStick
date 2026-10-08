@@ -18,6 +18,8 @@ fn config_dir() -> Option<PathBuf> {
 /// <cache>/Colony/MemoryStick/: ~/.cache on Linux, ~/Library/Caches on
 /// macOS. Windows has no cache root of its own, so there it is a cache\
 /// folder next to the preferences, which clearing it then cannot delete.
+/// Only the web view's folder lives there, and macOS has none to choose.
+#[cfg_attr(target_os = "macos", allow(dead_code))]
 pub fn cache_dir() -> Option<PathBuf> {
     let dir = dirs::cache_dir()?.join("Colony").join(PROGRAM);
     Some(if cfg!(windows) {
