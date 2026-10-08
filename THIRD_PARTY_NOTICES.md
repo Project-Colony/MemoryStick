@@ -9,7 +9,7 @@ build.
 |---|---|---|---|---|
 | highlight.js | 11.10.0 | BSD-3-Clause | `dist/vendor/highlight/` ([LICENSE](dist/vendor/highlight/LICENSE)) | https://github.com/highlightjs/highlight.js |
 | KaTeX | 0.16.11 | MIT | `dist/vendor/katex/katex.min.js`, `katex.min.css` ([LICENSE](dist/vendor/katex/LICENSE)) | https://github.com/KaTeX/KaTeX |
-| KaTeX fonts | 0.16.11 | OFL-1.1 | `dist/vendor/katex/fonts/` (notice in each font file, see [LICENSE](dist/vendor/katex/LICENSE)) | https://github.com/KaTeX/KaTeX |
+| KaTeX fonts | 0.16.11 | OFL-1.1 | `dist/vendor/katex/fonts/` (notice in each font file, licence text in [LICENSE](dist/vendor/katex/LICENSE)) | https://github.com/KaTeX/KaTeX |
 | Mermaid | 11.12.3 | MIT | `dist/vendor/mermaid/mermaid.min.js` ([LICENSE](dist/vendor/mermaid/LICENSE)) | https://github.com/mermaid-js/mermaid |
 
 `mermaid.min.js` is a single-file build that also contains 76 npm package
