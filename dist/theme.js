@@ -45,15 +45,15 @@ function toggleMode() {
   applyTheme(other ? other.slug : dark ? 'gruvbox-light' : 'gruvbox-dark');
 }
 
-// highlight.js tokens take palette colours (styles.css). In a theme where a
-// palette colour is under 3:1 on the code background, that token keeps stock
-// GitHub's colour instead: [palette colour, GitHub light, GitHub dark].
+// highlight.js tokens take palette colours (styles.css). In a theme where
+// the first is under 3:1 on the code background, the token takes the next
+// one, and text-primary (always at least 4.5:1) when none is legible.
 const HIGHLIGHT = {
-  keyword: ['--colony-error', '#d73a49', '#ff7b72'],
-  title: ['--colony-accent-blue', '#6f42c1', '#d2a8ff'],
-  number: ['--colony-accent-icon', '#005cc5', '#79c0ff'],
-  string: ['--colony-success', '#032f62', '#a5d6ff'],
-  comment: ['--colony-text-muted', '#6a737d', '#8b949e'],
+  keyword: ['--colony-error', '--colony-error-light'],
+  title: ['--colony-accent-blue', '--colony-accent-icon'],
+  number: ['--colony-accent-icon', '--colony-accent-blue'],
+  string: ['--colony-success', '--colony-btn-success'],
+  comment: ['--colony-text-muted', '--colony-text-secondary'],
 };
 
 // WCAG relative luminance of a #rrggbb colour.
@@ -73,11 +73,10 @@ function contrast(a, b) {
 
 function keepHighlightLegible() {
   const background = cssVar('--colony-bg-primary');
-  const dark = isDark();
-  for (const [token, [palette, light, darkStock]] of Object.entries(HIGHLIGHT)) {
-    // An unreadable value gives NaN, which also falls back to stock.
-    if (contrast(cssVar(palette), background) >= 3) $root.style.removeProperty('--hl-' + token);
-    else $root.style.setProperty('--hl-' + token, dark ? darkStock : light);
+  for (const [token, candidates] of Object.entries(HIGHLIGHT)) {
+    // An unreadable value gives NaN, which counts as illegible.
+    const legible = candidates.find((name) => contrast(cssVar(name), background) >= 3);
+    $root.style.setProperty('--hl-' + token, `var(${legible || '--colony-text-primary'})`);
   }
 }
 

@@ -269,8 +269,9 @@ body.drag-over #drop-hint .hint-title { color: var(--colony-accent-blue); }
 
 /* ===== Syntax highlighting =====
    highlight.js token groups as in its GitHub theme, one Colony colour each.
-   theme.js sets --hl-* to GitHub's own colour where the palette one would be
-   under 3:1. --colony-warning is not used: as text it is under 3:1 in 16 themes. */
+   theme.js points --hl-* at the first palette colour that is at least 3:1 on
+   the code background. --colony-warning is not used: as text it is under 3:1
+   in 16 themes. */
 .hljs { color: var(--colony-text-primary); }
 .hljs-doctag, .hljs-keyword, .hljs-meta .hljs-keyword, .hljs-template-tag,
 .hljs-template-variable, .hljs-type, .hljs-variable.language_ {
