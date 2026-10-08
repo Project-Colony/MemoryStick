@@ -11,7 +11,7 @@ Welcome to **MemoryStick**, a _complete_ Markdown viewer written in **Rust** wit
 ## Task list
 
 - [x] Full GFM support (tables, task lists, strikethrough)
-- [x] Syntax highlighting (highlight.js, 190+ languages)
+- [x] Syntax highlighting (highlight.js, 36 common languages)
 - [x] Math (KaTeX)
 - [x] Mermaid diagrams
 - [x] Dark mode
@@ -48,7 +48,8 @@ def fibonacci(n):
 ## Citation
 
 > Simplicity is the ultimate sophistication.
-> - *Leonardo da Vinci*
+>
+> *Leonardo da Vinci*
 
 ## Math
 
