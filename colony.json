@@ -1,0 +1,6 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Project-Colony/Project-Colony-Resources/main/generated/colony.schema.json",
+  "name": "MemoryStick",
+  "category": "office",
+  "icon": "src-tauri/icons/icon.png"
+}

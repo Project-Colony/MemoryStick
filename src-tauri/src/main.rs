@@ -1,4 +1,4 @@
-// Empêche la console Windows en release
+// No console window on Windows in release builds
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod markdown;
@@ -23,8 +23,7 @@ fn render_markdown(content: String) -> String {
 #[tauri::command]
 fn load_file(path: String) -> Result<LoadedFile, String> {
     let pb = PathBuf::from(&path);
-    let content = std::fs::read_to_string(&pb)
-        .map_err(|e| format!("Impossible de lire le fichier : {e}"))?;
+    let content = std::fs::read_to_string(&pb).map_err(|e| format!("Cannot read the file: {e}"))?;
     let html = markdown::render(&content);
     let file_name = pb
         .file_name()
@@ -40,10 +39,17 @@ fn load_file(path: String) -> Result<LoadedFile, String> {
 }
 
 fn main() {
-    // Workarounds pour webkit2gtk ≥ 2.44 sur Linux (Wayland/XWayland)
-    // - DMA-BUF renderer alloue des buffers GBM invalides → page blanche
-    // - Compositing mode parfois buggé sur Wayland
-    // Ces variables doivent être positionnées AVANT l'init du webview.
+    // Answered before any window exists, so the release workflow can run the
+    // binary on a runner without a display.
+    if std::env::args().nth(1).as_deref() == Some("--version") {
+        println!("{} {}", env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"));
+        return;
+    }
+
+    // Workarounds for webkit2gtk >= 2.44 on Linux (Wayland/XWayland):
+    // - the DMA-BUF renderer allocates invalid GBM buffers, giving a blank page
+    // - compositing mode is sometimes broken on Wayland
+    // These must be set BEFORE the webview is initialised.
     #[cfg(target_os = "linux")]
     {
         if std::env::var_os("WEBKIT_DISABLE_DMABUF_RENDERER").is_none() {
@@ -59,14 +65,14 @@ fn main() {
         .plugin(tauri_plugin_fs::init())
         .invoke_handler(tauri::generate_handler![render_markdown, load_file])
         .setup(|app| {
-            // Si un fichier a été passé en argument (double-clic Windows/Linux)
+            // A file passed as an argument (double-click on Windows/Linux)
             let args: Vec<String> = std::env::args().skip(1).collect();
             if let Some(file_arg) = args.iter().find(|a| !a.starts_with("--")) {
                 let pb = PathBuf::from(file_arg);
                 if pb.is_file() {
                     if let Some(window) = app.get_webview_window("main") {
                         let path_str = pb.to_string_lossy().to_string();
-                        // Attendre un peu que le frontend soit prêt
+                        // Give the frontend a moment to get ready
                         let win_clone = window.clone();
                         std::thread::spawn(move || {
                             std::thread::sleep(std::time::Duration::from_millis(400));
@@ -78,5 +84,5 @@ fn main() {
             Ok(())
         })
         .run(tauri::generate_context!())
-        .expect("erreur au démarrage de Tauri");
+        .expect("failed to start Tauri");
 }

@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>MD Viewer</title>
+  <title>MemoryStick</title>
   <link rel="stylesheet" href="vendor/highlight/github.min.css" id="hljs-light">
   <link rel="stylesheet" href="vendor/highlight/github-dark.min.css" id="hljs-dark" disabled>
   <link rel="stylesheet" href="vendor/katex/katex.min.css">
@@ -11,22 +11,22 @@
 </head>
 <body>
   <header id="toolbar">
-    <button id="open-btn" title="Ouvrir un fichier (Ctrl+O)">📂 Ouvrir</button>
-    <button id="toc-btn" title="Table des matières">☰ Sommaire</button>
-    <span id="filename">Aucun fichier</span>
-    <button id="theme-btn" title="Mode sombre (Ctrl+D)">🌙</button>
+    <button id="open-btn" title="Open a file (Ctrl+O)">📂 Open</button>
+    <button id="toc-btn" title="Table of contents">☰ Contents</button>
+    <span id="filename">No file</span>
+    <button id="theme-btn" title="Dark mode (Ctrl+D)">🌙</button>
   </header>
 
   <aside id="toc-panel" class="hidden">
-    <div class="toc-title">Table des matières</div>
+    <div class="toc-title">Table of contents</div>
     <nav id="toc-nav"></nav>
   </aside>
 
   <main id="main">
     <div id="drop-hint">
       <div class="hint-icon">📄</div>
-      <div class="hint-title">Glissez un fichier <code>.md</code> ici</div>
-      <div class="hint-sub">ou cliquez sur « 📂 Ouvrir » dans la barre du haut</div>
+      <div class="hint-title">Drop a <code>.md</code> file here</div>
+      <div class="hint-sub">or click "📂 Open" in the toolbar</div>
     </div>
     <article id="content" class="markdown-body"></article>
   </main>

@@ -1,0 +1,198 @@
+name: Release
+
+# The build legs only build and upload artifacts; they never see a key.
+# Authenticode (SignPath, once approved), the ed25519 .sig/.meta/.meta.sig,
+# verification and publishing all happen in Project-Colony-Resources'
+# sign-and-publish.yml, in this same run (its design/releases.md, section
+# "Shared signing workflow").
+
+on:
+  push:
+    branches: [main]
+  # Recovery path: finish an existing DRAFT release whose run failed. Start it
+  # from the tag (`gh workflow run release.yml --ref v0.1.0 -f tag=v0.1.0`):
+  # with SignPath on, sign-and-publish refuses a run whose commit is not the
+  # tag's, since SignPath records the run's commit as the source it signs.
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing draft release to build, sign and publish (e.g. v0.1.0). Run from that same tag."
+        required: true
+        type: string
+
+permissions: {}
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  release-please:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+    steps:
+      - uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
+        id: release
+        with:
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+      # release-please publishes the release before any binary exists. Held as
+      # a draft; sign-and-publish refuses anything else and publishes it last.
+      - name: Hold the release as a draft
+        if: steps.release.outputs.release_created == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.release.outputs.tag_name }}
+        run: gh release edit "$TAG" -R "$GITHUB_REPOSITORY" --draft=true
+
+  build:
+    name: Build ${{ matrix.asset }}
+    needs: release-please
+    if: ${{ !cancelled() && !failure() && (needs.release-please.outputs.release_created == 'true' || github.event_name == 'workflow_dispatch') }}
+    # GitHub-hosted runners only: SignPath rejects a signing request if any
+    # job leading to it ran on a self-hosted runner.
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+            asset: memorystick-linux
+          - target: x86_64-pc-windows-msvc
+            os: windows-latest
+            asset: memorystick-windows.exe
+          - target: aarch64-apple-darwin
+            os: macos-latest
+            asset: memorystick-macos
+          - target: x86_64-apple-darwin
+            os: macos-latest
+            asset: memorystick-macos-x86
+
+    steps:
+      # The tag, not the branch: the .meta sidecar binds these bytes to that
+      # version.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.release-please.outputs.tag_name || inputs.tag }}
+          persist-credentials: false
+
+      - uses: dtolnay/rust-toolchain@89b12181fb390509a0842a86cc55eeb8eb928c1d # stable branch
+        with:
+          targets: ${{ matrix.target }}
+
+      # No build cache here: SignPath forbids release builds that reuse
+      # outputs of earlier, unverified builds.
+
+      # Tauri 2 builds against webkit2gtk-4.1, which pulls in the GTK 3,
+      # libsoup 3 and JavaScriptCore development packages it links.
+      - name: Install Linux Tauri dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev
+
+      # --locked: release-please bumps Cargo.lock with Cargo.toml, so the tag
+      # builds exactly the dependency versions it records.
+      - name: Build
+        run: cargo build --release --locked --target ${{ matrix.target }} --manifest-path src-tauri/Cargo.toml
+
+      - name: Stage binary (Unix)
+        if: runner.os != 'Windows'
+        run: cp src-tauri/target/${{ matrix.target }}/release/memorystick ${{ matrix.asset }}
+
+      - name: Stage binary (Windows)
+        if: runner.os == 'Windows'
+        run: copy src-tauri\target\${{ matrix.target }}\release\memorystick.exe ${{ matrix.asset }}
+
+      # A manifest can PARSE perfectly and still leave the program listed in
+      # Colony with no Download button, because none of its assets match a
+      # convention. `colony validate-manifest` given the asset names catches
+      # exactly that. Linux only: one check per release is enough. The key
+      # never reaches this runner: signing happens in sign-and-publish below.
+      - name: Validate colony.json
+        if: runner.os == 'Linux'
+        run: |
+          curl -fsSL -o colony-validator \
+            https://github.com/Project-Colony/Colony/releases/latest/download/colony-linux
+          chmod +x colony-validator
+          ./colony-validator validate-manifest colony.json \
+            memorystick-linux memorystick-windows.exe memorystick-macos memorystick-macos-x86
+          rm -f colony-validator
+
+      # MemoryStick answers --version before it opens a window, so the
+      # binary can run here without a display: this proves it starts and
+      # carries the tag's version. Not on the x86_64 macOS leg, which is
+      # cross-built on an arm64 runner.
+      - name: Smoke test
+        if: matrix.asset != 'memorystick-macos-x86'
+        shell: bash
+        env:
+          ASSET: ${{ matrix.asset }}
+          TAG: ${{ needs.release-please.outputs.tag_name || inputs.tag }}
+        run: |
+          out="$(./"$ASSET" --version)"
+          echo "$out"
+          if [ "$out" != "memorystick ${TAG#v}" ]; then
+            echo "::error::$ASSET --version printed '$out', expected 'memorystick ${TAG#v}'"
+            exit 1
+          fi
+
+      # SignPath only signs an exe whose version resource names the project
+      # and carries the release version. tauri-build writes both, from
+      # productName in tauri.conf.json and the version in src-tauri/Cargo.toml.
+      - name: Check the Windows version resource
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          ASSET: ${{ matrix.asset }}
+          TAG: ${{ needs.release-please.outputs.tag_name || inputs.tag }}
+        run: |
+          $info = (Get-Item -LiteralPath $env:ASSET).VersionInfo
+          $version = $env:TAG -replace '^v', ''
+          "ProductName=$($info.ProductName) ProductVersion=$($info.ProductVersion) FileVersion=$($info.FileVersion) FileDescription=$($info.FileDescription)"
+          if ($info.ProductName -cne 'MemoryStick' -or $info.ProductVersion -cne $version) {
+            "::error::$env:ASSET has ProductName '$($info.ProductName)' and ProductVersion '$($info.ProductVersion)', expected 'MemoryStick' and '$version'"
+            exit 1
+          }
+
+      # The file at the artifact root, under its release name. The name
+      # prefix is what `artifact-pattern` below matches.
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: build-${{ matrix.asset }}
+          path: ${{ matrix.asset }}
+          if-no-files-found: error
+          retention-days: 1
+
+  sign-and-publish:
+    needs: [release-please, build]
+    if: ${{ !cancelled() && needs.build.result == 'success' }}
+    # The ceiling for every job in the called workflow.
+    permissions:
+      actions: read
+      contents: write
+    uses: Project-Colony/Project-Colony-Resources/.github/workflows/sign-and-publish.yml@619460ff4dc0049f129955f0988d368427b9eedb # main
+    with:
+      tag: ${{ needs.release-please.outputs.tag_name || inputs.tag }}
+      assets: "memorystick-linux memorystick-windows.exe memorystick-macos memorystick-macos-x86"
+      artifact-pattern: build-*
+      # Uncomment once SignPath has approved this project and its project
+      # exists in the Project-Colony SignPath organisation:
+      # signpath-project-slug: "memorystick"
+    # Named, not `inherit`: the called workflow gets these two and nothing else.
+    secrets:
+      COLONY_SIGNING_KEY_PEM: ${{ secrets.COLONY_SIGNING_KEY_PEM }}
+      SIGNPATH_API_TOKEN: ${{ secrets.SIGNPATH_API_TOKEN }}

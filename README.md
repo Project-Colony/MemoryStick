@@ -1,85 +1,151 @@
-# MD Viewer
+<div align="center">
 
-Visionneuse Markdown moderne, complète et légère, écrite en **Rust + Tauri** — disponible sur **Windows, macOS et Linux**.
+**A Markdown viewer for Windows, macOS and Linux, for reading a Markdown file the way it was meant to look without opening an editor or a browser.**
 
-![build](https://github.com/MotherSphere/md-viewers/actions/workflows/build.yml/badge.svg)
+</div>
 
-## Fonctionnalités
+[![License: GPL-3.0-or-later](https://img.shields.io/badge/License-GPL--3.0--or--later-blue.svg)](LICENSE)
+[![Colony app](https://img.shields.io/badge/Colony-office-purple)](https://github.com/Project-Colony/Colony)
+[![Platforms](https://img.shields.io/badge/platforms-linux%20%7C%20windows%20%7C%20macOS-lightgrey)](#installation)
 
-- **GitHub Flavored Markdown** complet (via [comrak](https://github.com/kivikakk/comrak)) : titres, listes, tableaux, citations, liens, images, task lists, strikethrough, autolinks, footnotes, description lists
-- **Coloration syntaxique** du code (190+ langages, highlight.js, thèmes clair/sombre)
-- **Formules mathématiques** inline et bloc via **KaTeX** (`$...$`, `$$...$$`, ```` ```math ````)
-- **Diagrammes Mermaid** (flowchart, séquence, classe, gantt, état…)
-- **Table des matières** auto-générée, panneau latéral cliquable
-- **Mode sombre** (Ctrl+D)
-- **Drag & drop** d'un fichier `.md` dans la fenêtre
-- **Bouton Ouvrir** (Ctrl+O) avec filtre sur les extensions Markdown
-- **Images relatives** résolues depuis le dossier du fichier
-- **Ancres** sur titres, **notes de bas de page**, **front matter** YAML
-- **Zoom** (Ctrl +/−), rechargement (Ctrl+R)
-- **Association de fichiers** `.md`, `.markdown`, `.mdown`, `.mkd`, `.mkdn`
-- **100 % hors-ligne** — aucune ressource externe, tout est vendoré dans l'app
+A Markdown file opened in a text editor shows its source: tables, math and
+diagrams stay raw. Rendering it usually means an editor's preview pane or a
+code hosting site. MemoryStick opens the file in a window of its own and
+renders it the way GitHub does, with highlighted code, math, Mermaid diagrams
+and a table of contents, from a single executable.
 
-## Captures
+> **Status:** the viewer has been in use under its former name, MD Viewer.
+> Nothing has been released under the MemoryStick name yet; the
+> first release, signed by the Project-Colony organisation, is pending. CI
+> builds and tests the Rust side on Linux, Windows and macOS, but nothing in CI
+> opens the window, so the interface is only checked by hand.
 
-*(à ajouter)*
+## Why MemoryStick
+
+- **A text editor** shows the Markdown source, not the document.
+- **An editor's preview pane** renders it, but only inside that editor, and
+  usually without math or diagrams unless you install extensions.
+- **A code hosting site** renders it well, but only once the file is pushed
+  there, and only online.
+- **MemoryStick** opens a `.md` file directly, from a double-click, a drop on
+  its window or the command line, and needs nothing else installed beyond the
+  system's web view. It has no account and no telemetry.
+
+## What it does
+
+- GitHub Flavored Markdown, rendered by [comrak](https://github.com/kivikakk/comrak): tables, task lists, strikethrough, autolinks, footnotes and description lists; a YAML front matter block is left out of the page
+- Syntax highlighting with highlight.js (its 36 common languages), in light and dark themes
+- Math with KaTeX: `$...$`, `$$...$$` and ```` ```math ```` blocks
+- Mermaid diagrams
+- A table of contents panel built from the document's headings
+- Dark mode
+- Relative images resolved from the document's folder
+- Open a file with the Open button, by dropping it on the window, or by passing its path on the command line
+
+```bash
+memorystick notes.md
+```
+
+| Shortcut | Action |
+|---|---|
+| Ctrl+O | Open a file |
+| Ctrl+D | Toggle dark mode |
+| Ctrl+R | Reload the current file |
+
+On macOS, use Cmd instead of Ctrl. [docs/sample.md](docs/sample.md) shows
+most of the features.
 
 ## Installation
 
-Téléchargez la dernière version pour votre système depuis la page [Releases](https://github.com/MotherSphere/md-viewers/releases) :
+### Via Colony (recommended)
 
-- **Windows** : `MD Viewer_x.x.x_x64_en-US.msi` (installeur) ou `MD Viewer_x.x.x_x64-setup.exe` (NSIS)
-- **macOS** : `MD Viewer_x.x.x_x64.dmg` (Intel) ou `MD Viewer_x.x.x_aarch64.dmg` (Apple Silicon)
-- **Linux** : `.AppImage` (portable), `.deb` (Debian/Ubuntu) ou `.rpm` (Fedora)
+Search for **MemoryStick** in [Colony](https://github.com/Project-Colony/Colony)
+and install it. Colony checks each release's signature before installing it,
+and updates arrive through the launcher.
 
-## Utilisation
+### Direct binary download
 
-1. Ouvrez l'application
-2. Cliquez sur **📂 Ouvrir** ou glissez un fichier `.md` dans la fenêtre
-3. Lisez, profitez :)
+Grab the asset for your platform from the
+[latest release](../../releases/latest). Each is a single executable.
 
-Raccourcis :
-
-| Raccourci | Action |
+| Platform | Asset |
 |---|---|
-| **Ctrl+O** | Ouvrir un fichier |
-| **Ctrl+D** | Basculer mode sombre |
-| **Ctrl+R** | Recharger le fichier courant |
-| **Ctrl +/−** | Zoom avant/arrière |
-
-## Développement
-
-Prérequis : [Rust stable](https://rustup.rs/) et les dépendances système Tauri (WebKitGTK sur Linux, aucune dépendance extra sur Windows/macOS).
+| Linux | `memorystick-linux` |
+| Windows | `memorystick-windows.exe` |
+| macOS (Apple Silicon) | `memorystick-macos` |
+| macOS (Intel) | `memorystick-macos-x86` |
 
 ```bash
-# Lancer en mode dev
-cd src-tauri
-cargo tauri dev
-
-# Build release pour la plateforme courante
-cargo tauri build
+chmod +x memorystick-linux && ./memorystick-linux
 ```
 
-## Architecture
+MemoryStick uses the system's web view: WebView2 on Windows (included in
+Windows 11 and current Windows 10), WebKit on macOS, and WebKitGTK 4.1 on
+Linux (for example `libwebkit2gtk-4.1-0` on Debian and Ubuntu,
+`webkit2gtk-4.1` on Arch Linux).
 
-- **Backend Rust** (`src-tauri/`) : rendu Markdown → HTML via `comrak` (extensions GFM, math dollars, footnotes, etc.)
-- **Frontend** (`dist/`) : HTML/CSS/JS purs, zéro bundler. Tous les assets sont vendorés dans `dist/vendor/` :
-  - `highlight.js` 11 — coloration syntaxique
-  - `KaTeX` 0.16 — rendu des maths
-  - `Mermaid` 10 — diagrammes
-- **IPC Tauri** : commandes `load_file` et `render_markdown` côté Rust, appelées via `invoke()` depuis le JS.
-
-## Builds multi-plateformes
-
-Les binaires Linux / Windows / macOS (Intel + Apple Silicon) sont générés automatiquement par **GitHub Actions** à chaque push sur `main` (voir `.github/workflows/build.yml`).
-
-Pour publier une release avec binaires attachés, pousser un tag :
+### Build from source
 
 ```bash
-git tag v1.0.0
-git push origin v1.0.0
+git clone https://github.com/Project-Colony/MemoryStick
+cd MemoryStick
+cargo build --release --locked --manifest-path src-tauri/Cargo.toml
 ```
 
-## Licence
+Requires Rust 1.90 or newer and, on Linux, the WebKitGTK 4.1 development
+package (`libwebkit2gtk-4.1-dev` on Debian and Ubuntu). The executable is
+`src-tauri/target/release/memorystick`. No Tauri CLI or Node.js is needed:
+`src-tauri/` is the Rust application, which reads a file and renders its
+Markdown to HTML, and `dist/` is the interface, plain HTML, CSS and
+JavaScript embedded in the executable at build time.
 
-MIT
+## Documentation
+
+- [docs/sample.md](docs/sample.md): a document that exercises most features;
+  open it in MemoryStick to see them.
+- [docs/third-party-notices.md](docs/third-party-notices.md): the libraries
+  MemoryStick ships and their licences.
+- [SECURITY.md](SECURITY.md): how to report a vulnerability.
+
+## Code signing policy
+
+Free code signing provided by [SignPath.io](https://signpath.io), certificate by [SignPath Foundation](https://signpath.org).
+
+Windows builds are signed this way once the SignPath Foundation has accepted
+the project; until then they ship without Authenticode. Every release asset,
+on every platform, is always signed with the Project-Colony organisation's
+ed25519 key, which Colony verifies before installing it. Releases are cut by
+release-please: merging its release pull request tags the version, and the
+release workflow builds the four executables from that tag, signs them and
+publishes them.
+
+- Committers and reviewers: [MotherSphere](https://github.com/MotherSphere)
+- Approvers: [MotherSphere](https://github.com/MotherSphere)
+
+### Privacy policy
+
+MemoryStick has no account, telemetry, analytics, crash reporting or update
+check, and its own code makes no network requests. It keeps no history or
+settings of its own.
+
+A document can point to content on the web, and MemoryStick displays it the
+way a browser would: when a document you open contains images hosted on the
+web, they load as soon as the document is shown, and the servers hosting them
+receive your IP address and can tell that the document was opened. Documents
+can also contain HTML, which is displayed without filtering, so only open
+documents from sources you trust.
+
+MemoryStick's interface is rendered by the operating system's web view
+(Microsoft Edge WebView2 on Windows, WebKit on macOS and Linux), which follows
+its vendor's own privacy policy.
+
+## License
+
+GPL-3.0-or-later. You may redistribute and modify MemoryStick under the terms
+of version 3 of the GNU General Public License, or (at your option) any later
+version. The full text is in [LICENSE](LICENSE).
+
+The libraries in `dist/vendor/` keep their own licences: BSD-3-Clause for
+highlight.js, MIT for KaTeX and Mermaid, OFL-1.1 for the KaTeX fonts, and
+those of the packages Mermaid's build contains. See
+[docs/third-party-notices.md](docs/third-party-notices.md).

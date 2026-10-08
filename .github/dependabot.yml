@@ -1,0 +1,36 @@
+# Keep the supply chain current: GitHub Actions and Cargo dependencies.
+#
+# Copied from Project-Colony-Resources templates/dependabot.yml. The one
+# difference is the cargo directory: the crate lives in src-tauri/.
+#
+# Dependabot opening a PR is not the rule being followed, merging it is. See
+# design/dependencies.md: everything is on its latest release, always.
+#
+# The libraries in dist/vendor/ (highlight.js, KaTeX, Mermaid, the Colony
+# themes) are not packages Dependabot can see. Check them by hand on the
+# weekly pass; docs/third-party-notices.md lists their versions.
+version: 2
+updates:
+  # A stale action is the same problem as a stale crate, with more privileges.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ["*"]
+
+  - package-ecosystem: cargo
+    directory: /src-tauri
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    # Transitive crates too, so the lockfile stays current without a manual
+    # `cargo update`.
+    allow:
+      - dependency-type: all
+    groups:
+      # Minor and patch bumps arrive as one PR, so a routine week is one review
+      # rather than fifteen. Majors stay separate: they deserve their own read.
+      cargo-minor:
+        update-types: ["minor", "patch"]

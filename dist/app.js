@@ -1,9 +1,9 @@
-// MD Viewer — frontend (Tauri v2)
-// Les bindings Tauri sont exposés via withGlobalTauri:true.
-// Les plugins (dialog, fs) ne sont PAS auto-attachés à window.__TAURI__ ;
-// on les appelle via invoke('plugin:NAME|COMMAND', args).
+// MemoryStick frontend (Tauri v2)
+// The Tauri bindings are exposed through withGlobalTauri: true.
+// Plugins (dialog, fs) are NOT attached to window.__TAURI__ automatically,
+// so they are called through invoke('plugin:NAME|COMMAND', args).
 
-// Affiche toute erreur directement dans la page (debug)
+// Show any error right in the page (debugging aid)
 window.addEventListener('error', (e) => {
   const el = document.getElementById('content') || document.body;
   if (el) {
@@ -15,7 +15,7 @@ window.addEventListener('error', (e) => {
 });
 
 if (!window.__TAURI__) {
-  document.body.innerHTML = '<pre style="color:red;padding:40px">window.__TAURI__ non disponible. Vérifier withGlobalTauri:true dans tauri.conf.json.</pre>';
+  document.body.innerHTML = '<pre style="color:red;padding:40px">window.__TAURI__ is not available. Check withGlobalTauri: true in tauri.conf.json.</pre>';
   throw new Error('Tauri API unavailable');
 }
 
@@ -23,12 +23,12 @@ const invoke = window.__TAURI__.core.invoke;
 const convertFileSrc = window.__TAURI__.core.convertFileSrc;
 const listen = window.__TAURI__.event.listen;
 
-// Wrapper dialog.open via invoke direct sur le plugin
+// dialog.open, through a direct invoke on the plugin
 async function openDialog(options) {
   return await invoke('plugin:dialog|open', { options });
 }
 
-// ===== État =====
+// ===== State =====
 let currentFilePath = null;
 let currentDir = null;
 
@@ -51,7 +51,7 @@ if (window.mermaid) {
   });
 }
 
-// ===== Post-traitement HTML =====
+// ===== HTML post-processing =====
 function dirname(p) {
   if (!p) return null;
   const idx = Math.max(p.lastIndexOf('/'), p.lastIndexOf('\\'));
@@ -69,7 +69,7 @@ function isAbsolute(p) {
 }
 
 function postProcess() {
-  // 1) Images relatives → convertFileSrc(absolute path)
+  // 1) Relative images: convertFileSrc(absolute path)
   if (currentDir) {
     $content.querySelectorAll('img').forEach(img => {
       const src = img.getAttribute('src') || '';
@@ -84,14 +84,14 @@ function postProcess() {
     });
   }
 
-  // 2) Coloration syntaxique (highlight.js) + extraction des blocs mermaid
+  // 2) Syntax highlighting (highlight.js) and extraction of mermaid blocks
   $content.querySelectorAll('pre code').forEach((codeEl) => {
     const classes = codeEl.className || '';
     const langMatch = classes.match(/language-([\w-]+)/);
     const lang = langMatch ? langMatch[1].toLowerCase() : null;
 
     if (lang === 'mermaid') {
-      // Remplace <pre><code class="language-mermaid">…</code></pre> par <div class="mermaid">…</div>
+      // Replace <pre><code class="language-mermaid">...</code></pre> with <div class="mermaid">...</div>
       const pre = codeEl.parentElement;
       const div = document.createElement('div');
       div.className = 'mermaid';
@@ -112,8 +112,8 @@ function postProcess() {
     } catch (_) {}
   });
 
-  // 3) KaTeX : comrak émet <span data-math-style="inline|display"> et
-  //           <pre><code class="language-math" data-math-style="display">
+  // 3) KaTeX: comrak emits <span data-math-style="inline|display"> and
+  //    <pre><code class="language-math" data-math-style="display">
   if (window.katex) {
     $content.querySelectorAll('[data-math-style]').forEach((el) => {
       const display = el.getAttribute('data-math-style') === 'display';
@@ -125,7 +125,7 @@ function postProcess() {
           errorColor: '#cc0000',
           strict: 'ignore'
         });
-        // Remplace le nœud entier (span ou pre>code) par le HTML KaTeX
+        // Replace the whole node (span or pre>code) with the KaTeX HTML
         if (el.tagName === 'CODE' && el.parentElement && el.parentElement.tagName === 'PRE') {
           el.parentElement.outerHTML = html;
         } else {
@@ -137,7 +137,7 @@ function postProcess() {
     });
   }
 
-  // 4) Mermaid render (après extraction)
+  // 4) Mermaid render (after extraction)
   if (window.mermaid) {
     const blocks = $content.querySelectorAll('.mermaid');
     blocks.forEach(async (el, i) => {
@@ -147,12 +147,12 @@ function postProcess() {
         const { svg } = await window.mermaid.render(id, code);
         el.innerHTML = svg;
       } catch (err) {
-        el.innerHTML = `<pre style="color:#cc0000">Erreur Mermaid: ${String(err.message || err)}</pre>`;
+        el.innerHTML = `<pre style="color:#cc0000">Mermaid error: ${String(err.message || err)}</pre>`;
       }
     });
   }
 
-  // 5) Liens externes → navigateur par défaut
+  // 5) External links: default browser
   $content.querySelectorAll('a[href]').forEach(a => {
     const href = a.getAttribute('href') || '';
     if (/^https?:\/\//i.test(href)) {
@@ -167,14 +167,14 @@ function postProcess() {
     }
   });
 
-  // 6) Construire la TOC
+  // 6) Build the table of contents
   buildToc();
 }
 
 function buildToc() {
   const headings = $content.querySelectorAll('h1, h2, h3, h4');
   if (headings.length === 0) {
-    $tocNav.innerHTML = '<em style="color:#8b949e;font-size:13px">Aucun titre dans ce document</em>';
+    $tocNav.innerHTML = '<em style="color:#8b949e;font-size:13px">No headings in this document</em>';
     return;
   }
   const root = document.createElement('ul');
@@ -198,7 +198,7 @@ function buildToc() {
   });
 }
 
-// ===== Rendu =====
+// ===== Rendering =====
 async function loadAndRender(filePath) {
   try {
     const result = await invoke('load_file', { path: filePath });
@@ -208,12 +208,12 @@ async function loadAndRender(filePath) {
     $content.innerHTML = result.html;
     $main.classList.add('has-content');
     $filename.textContent = result.file_name;
-    document.title = `${result.file_name} — MD Viewer`;
+    document.title = `${result.file_name} - MemoryStick`;
 
     postProcess();
     window.scrollTo(0, 0);
   } catch (err) {
-    alert('Erreur : ' + err);
+    alert('Error: ' + err);
   }
 }
 
@@ -224,17 +224,17 @@ document.getElementById('open-btn').addEventListener('click', async () => {
       multiple: false,
       filters: [
         { name: 'Markdown', extensions: ['md', 'markdown', 'mdown', 'mkd', 'mkdn', 'txt'] },
-        { name: 'Tous les fichiers', extensions: ['*'] }
+        { name: 'All files', extensions: ['*'] }
       ]
     });
-    // Tauri dialog plugin retourne une string (ou null/undefined si annulé)
+    // The Tauri dialog plugin returns a string (or null/undefined when cancelled)
     if (selected && typeof selected === 'string') {
       loadAndRender(selected);
     } else if (selected && typeof selected === 'object' && selected.path) {
       loadAndRender(selected.path);
     }
   } catch (err) {
-    alert('Erreur dialog : ' + err);
+    alert('Dialog error: ' + err);
   }
 });
 
@@ -260,7 +260,7 @@ function toggleTheme() {
 
 $themeBtn.addEventListener('click', toggleTheme);
 
-// Raccourcis clavier
+// Keyboard shortcuts
 document.addEventListener('keydown', (e) => {
   if ((e.ctrlKey || e.metaKey) && e.key === 'o') {
     e.preventDefault();
@@ -274,7 +274,7 @@ document.addEventListener('keydown', (e) => {
   }
 });
 
-// ===== Drag & drop (événement Tauri natif) =====
+// ===== Drag and drop (native Tauri event) =====
 listen('tauri://drag-enter', () => {
   document.body.classList.add('drag-over');
 });
@@ -289,11 +289,11 @@ listen('tauri://drag-drop', (event) => {
   }
 });
 
-// Empêcher le drop web standard qui naviguerait
+// Block the standard web drop, which would navigate away
 window.addEventListener('dragover', (e) => e.preventDefault());
 window.addEventListener('drop', (e) => e.preventDefault());
 
-// ===== Fichier passé en argument (double-clic) =====
+// ===== File passed as an argument (double-click) =====
 listen('open-file-path', (event) => {
   if (event.payload) loadAndRender(event.payload);
 });
