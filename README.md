@@ -1,8 +1,37 @@
-# MemoryStick
+<div align="center">
 
-MemoryStick is a Markdown viewer for Windows, macOS and Linux, written in Rust with Tauri. It is software from the Colony project (https://github.com/Project-Colony/Colony). It was formerly called MD Viewer.
+**A Markdown viewer for Windows, macOS and Linux, for reading a Markdown file the way it was meant to look without opening an editor or a browser.**
 
-## Features
+</div>
+
+[![License: GPL-3.0-or-later](https://img.shields.io/badge/License-GPL--3.0--or--later-blue.svg)](LICENSE)
+[![Colony app](https://img.shields.io/badge/Colony-office-purple)](https://github.com/Project-Colony/Colony)
+[![Platforms](https://img.shields.io/badge/platforms-linux%20%7C%20windows%20%7C%20macOS-lightgrey)](#installation)
+
+A Markdown file opened in a text editor shows its source: tables, math and
+diagrams stay raw. Rendering it usually means an editor's preview pane or a
+code hosting site. MemoryStick opens the file in a window of its own and
+renders it the way GitHub does, with highlighted code, math, Mermaid diagrams
+and a table of contents, from a single executable.
+
+> **Status:** the viewer has been in use under its former name, MD Viewer.
+> Nothing has been released under the MemoryStick name yet; the
+> first release, signed by the Project-Colony organisation, is pending. CI
+> builds and tests the Rust side on Linux, Windows and macOS, but nothing in CI
+> opens the window, so the interface is only checked by hand.
+
+## Why MemoryStick
+
+- **A text editor** shows the Markdown source, not the document.
+- **An editor's preview pane** renders it, but only inside that editor, and
+  usually without math or diagrams unless you install extensions.
+- **A code hosting site** renders it well, but only once the file is pushed
+  there, and only online.
+- **MemoryStick** opens a `.md` file directly, from a double-click, a drop on
+  its window or the command line, and needs nothing else installed beyond the
+  system's web view. It has no account and no telemetry.
+
+## What it does
 
 - GitHub Flavored Markdown, rendered by [comrak](https://github.com/kivikakk/comrak): tables, task lists, strikethrough, autolinks, footnotes and description lists; a YAML front matter block is left out of the page
 - Syntax highlighting with highlight.js (its 36 common languages), in light and dark themes
@@ -13,22 +42,9 @@ MemoryStick is a Markdown viewer for Windows, macOS and Linux, written in Rust w
 - Relative images resolved from the document's folder
 - Open a file with the Open button, by dropping it on the window, or by passing its path on the command line
 
-[docs/sample.md](docs/sample.md) shows most of these.
-
-## Install
-
-- **With Colony:** install MemoryStick from [Colony](https://github.com/Project-Colony/Colony), which checks each release's signature before installing it.
-- **From a release:** download the file for your system from [Releases](https://github.com/Project-Colony/MemoryStick/releases): `memorystick-linux`, `memorystick-windows.exe`, `memorystick-macos` (Apple silicon) or `memorystick-macos-x86` (Intel). Each is a single executable; on Linux and macOS, make it executable with `chmod +x`.
-
-MemoryStick uses the system's web view: WebView2 on Windows (included in Windows 11 and current Windows 10), WebKit on macOS, and WebKitGTK 4.1 on Linux (for example `libwebkit2gtk-4.1-0` on Debian and Ubuntu, `webkit2gtk-4.1` on Arch Linux).
-
-## Usage
-
 ```bash
 memorystick notes.md
 ```
-
-or start MemoryStick and open a file from the window.
 
 | Shortcut | Action |
 |---|---|
@@ -36,27 +52,60 @@ or start MemoryStick and open a file from the window.
 | Ctrl+D | Toggle dark mode |
 | Ctrl+R | Reload the current file |
 
-On macOS, use Cmd instead of Ctrl.
+On macOS, use Cmd instead of Ctrl. [docs/sample.md](docs/sample.md) shows
+most of the features.
 
-## Build from source
+## Installation
 
-Prerequisites: Rust (stable toolchain) and, on Linux, the WebKitGTK 4.1 development package (`libwebkit2gtk-4.1-dev` on Debian and Ubuntu).
+### Via Colony (recommended)
+
+Search for **MemoryStick** in [Colony](https://github.com/Project-Colony/Colony)
+and install it. Colony checks each release's signature before installing it,
+and updates arrive through the launcher.
+
+### Direct binary download
+
+Grab the asset for your platform from the
+[latest release](../../releases/latest). Each is a single executable.
+
+| Platform | Asset |
+|---|---|
+| Linux | `memorystick-linux` |
+| Windows | `memorystick-windows.exe` |
+| macOS (Apple Silicon) | `memorystick-macos` |
+| macOS (Intel) | `memorystick-macos-x86` |
 
 ```bash
+chmod +x memorystick-linux && ./memorystick-linux
+```
+
+MemoryStick uses the system's web view: WebView2 on Windows (included in
+Windows 11 and current Windows 10), WebKit on macOS, and WebKitGTK 4.1 on
+Linux (for example `libwebkit2gtk-4.1-0` on Debian and Ubuntu,
+`webkit2gtk-4.1` on Arch Linux).
+
+### Build from source
+
+```bash
+git clone https://github.com/Project-Colony/MemoryStick
+cd MemoryStick
 cargo build --release --locked --manifest-path src-tauri/Cargo.toml
 ```
 
-The executable is `src-tauri/target/release/memorystick`. No Tauri CLI or Node.js is needed: the interface in `dist/` is plain HTML, CSS and JavaScript, embedded in the executable at build time.
+Requires Rust 1.90 or newer and, on Linux, the WebKitGTK 4.1 development
+package (`libwebkit2gtk-4.1-dev` on Debian and Ubuntu). The executable is
+`src-tauri/target/release/memorystick`. No Tauri CLI or Node.js is needed:
+`src-tauri/` is the Rust application, which reads a file and renders its
+Markdown to HTML, and `dist/` is the interface, plain HTML, CSS and
+JavaScript embedded in the executable at build time.
 
-## Structure
+## Documentation
 
-- `src-tauri/`: the Rust application, which reads a file and renders its Markdown to HTML with comrak
-- `dist/`: the interface, which adds syntax highlighting, math, diagrams and the table of contents
-- `dist/vendor/`: highlight.js, KaTeX and Mermaid, unmodified
-
-## Releases
-
-Releases are cut by release-please. Merging its release pull request tags the version, and the release workflow builds the four executables from that tag, signs them and publishes them.
+- [docs/sample.md](docs/sample.md): a document that exercises most features;
+  open it in MemoryStick to see them.
+- [docs/third-party-notices.md](docs/third-party-notices.md): the libraries
+  MemoryStick ships and their licences.
+- [SECURITY.md](SECURITY.md): how to report a vulnerability.
 
 ## Code signing policy
 
@@ -65,7 +114,10 @@ Free code signing provided by [SignPath.io](https://signpath.io), certificate by
 Windows builds are signed this way once the SignPath Foundation has accepted
 the project; until then they ship without Authenticode. Every release asset,
 on every platform, is always signed with the Project-Colony organisation's
-ed25519 key, which Colony verifies before installing it.
+ed25519 key, which Colony verifies before installing it. Releases are cut by
+release-please: merging its release pull request tags the version, and the
+release workflow builds the four executables from that tag, signs them and
+publishes them.
 
 - Committers and reviewers: [MotherSphere](https://github.com/MotherSphere)
 - Approvers: [MotherSphere](https://github.com/MotherSphere)
