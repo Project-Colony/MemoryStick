@@ -224,7 +224,14 @@ async function loadAndRender(filePath) {
     currentFilePath = result.file_path;
     currentDir = dirname(currentFilePath);
 
-    $content.innerHTML = result.html;
+    // Parsed in an inert <template> first, so that the document's <meta>
+    // elements (a refresh tag navigates the window) and <link> elements
+    // (preconnect and prefetch hints reach the network) are dropped before
+    // the page ever sees them.
+    const doc = document.createElement('template');
+    doc.innerHTML = result.html;
+    doc.content.querySelectorAll('meta, link').forEach((el) => el.remove());
+    $content.replaceChildren(doc.content);
     $main.classList.add('has-content');
     $filename.textContent = result.file_name;
     document.title = `${result.file_name} - MemoryStick`;
