@@ -4,29 +4,64 @@
 mod markdown;
 
 use serde::Serialize;
-use std::path::PathBuf;
+use std::fs::File;
+use std::io::Read;
+use std::path::{Path, PathBuf};
 use tauri::{Emitter, Manager};
+
+/// The file types MemoryStick opens. The Open dialog offers the same list.
+const EXTENSIONS: [&str; 6] = ["md", "markdown", "mdown", "mkd", "mkdn", "txt"];
+/// Larger files are refused instead of being read into memory.
+const MAX_FILE_SIZE: u64 = 32 * 1024 * 1024;
 
 #[derive(Serialize)]
 struct LoadedFile {
-    content: String,
     html: String,
     file_path: String,
     file_name: String,
 }
 
+/// Reads a document. Refuses other file types, anything that is not a
+/// regular file (a device such as /dev/zero, a pipe, a folder) and files
+/// larger than MAX_FILE_SIZE.
+fn read_document(path: &Path) -> Result<String, String> {
+    let ext = path.extension().and_then(|e| e.to_str()).unwrap_or("");
+    if !EXTENSIONS
+        .iter()
+        .any(|known| known.eq_ignore_ascii_case(ext))
+    {
+        return Err("MemoryStick opens Markdown and text files only (.md, .markdown, .mdown, .mkd, .mkdn, .txt).".into());
+    }
+    let too_large = || format!("The file is larger than {} MiB.", MAX_FILE_SIZE >> 20);
+    let cannot_read = |e: std::io::Error| format!("Cannot read the file: {e}");
+    let meta = std::fs::metadata(path).map_err(cannot_read)?;
+    if !meta.is_file() {
+        return Err("This is not a regular file.".into());
+    }
+    if meta.len() > MAX_FILE_SIZE {
+        return Err(too_large());
+    }
+    // Bounded too, in case the file grew since its size was read.
+    let mut content = String::new();
+    File::open(path)
+        .and_then(|f| f.take(MAX_FILE_SIZE + 1).read_to_string(&mut content))
+        .map_err(cannot_read)?;
+    if content.len() as u64 > MAX_FILE_SIZE {
+        return Err(too_large());
+    }
+    Ok(content)
+}
+
 #[tauri::command]
 fn load_file(path: String) -> Result<LoadedFile, String> {
     let pb = PathBuf::from(&path);
-    let content = std::fs::read_to_string(&pb).map_err(|e| format!("Cannot read the file: {e}"))?;
-    let html = markdown::render(&content);
+    let html = markdown::render(&read_document(&pb)?);
     let file_name = pb
         .file_name()
         .and_then(|n| n.to_str())
         .unwrap_or("")
         .to_string();
     Ok(LoadedFile {
-        content,
         html,
         file_path: path,
         file_name,
@@ -142,5 +177,50 @@ mod tests {
         ] {
             assert!(!is_app_page(&bad.parse().unwrap()), "{bad}");
         }
+    }
+
+    #[test]
+    fn reads_only_small_documents_of_known_types() {
+        let dir = std::env::temp_dir().join(format!("memorystick-test-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let file = |name: &str, len: u64| {
+            let path = dir.join(name);
+            let f = File::create(&path).unwrap();
+            f.set_len(len).unwrap(); // sparse: no disk space used
+            path
+        };
+
+        for ok in [
+            "a.md",
+            "B.MD",
+            "c.markdown",
+            "d.mdown",
+            "e.mkd",
+            "f.mkdn",
+            "g.txt",
+        ] {
+            assert_eq!(read_document(&file(ok, 3)), Ok("\0\0\0".into()), "{ok}");
+        }
+        for refused in [
+            "id_ed25519",
+            "config",
+            ".md",
+            "x.md.exe",
+            "x.html",
+            "x.json",
+        ] {
+            assert!(read_document(&file(refused, 3)).is_err(), "{refused}");
+        }
+        assert!(read_document(&file("big.md", MAX_FILE_SIZE + 1)).is_err());
+        std::fs::create_dir_all(dir.join("folder.md")).unwrap();
+        assert!(read_document(&dir.join("folder.md")).is_err());
+        assert!(read_document(&dir.join("missing.md")).is_err());
+        #[cfg(unix)]
+        {
+            std::os::unix::fs::symlink("/dev/zero", dir.join("zero.md")).unwrap();
+            assert!(read_document(&dir.join("zero.md")).is_err());
+        }
+
+        std::fs::remove_dir_all(&dir).unwrap();
     }
 }

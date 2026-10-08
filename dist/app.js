@@ -241,9 +241,9 @@ document.getElementById('open-btn').addEventListener('click', async () => {
   try {
     const selected = await openDialog({
       multiple: false,
+      // The same list as EXTENSIONS in main.rs, which refuses other files
       filters: [
-        { name: 'Markdown', extensions: ['md', 'markdown', 'mdown', 'mkd', 'mkdn', 'txt'] },
-        { name: 'All files', extensions: ['*'] }
+        { name: 'Markdown', extensions: ['md', 'markdown', 'mdown', 'mkd', 'mkdn', 'txt'] }
       ]
     });
     // The Tauri dialog plugin returns a string (or null/undefined when cancelled)
