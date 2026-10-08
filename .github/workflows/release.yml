@@ -117,6 +117,21 @@ jobs:
         if: runner.os == 'Windows'
         run: copy src-tauri\target\${{ matrix.target }}\release\memorystick.exe ${{ matrix.asset }}
 
+      # A manifest can PARSE perfectly and still leave the program listed in
+      # Colony with no Download button, because none of its assets match a
+      # convention. `colony validate-manifest` given the asset names catches
+      # exactly that. Linux only: one check per release is enough. The key
+      # never reaches this runner: signing happens in sign-and-publish below.
+      - name: Validate colony.json
+        if: runner.os == 'Linux'
+        run: |
+          curl -fsSL -o colony-validator \
+            https://github.com/Project-Colony/Colony/releases/latest/download/colony-linux
+          chmod +x colony-validator
+          ./colony-validator validate-manifest colony.json \
+            memorystick-linux memorystick-windows.exe memorystick-macos memorystick-macos-x86
+          rm -f colony-validator
+
       # MemoryStick answers --version before it opens a window, so the
       # binary can run here without a display: this proves it starts and
       # carries the tag's version. Not on the x86_64 macOS leg, which is
