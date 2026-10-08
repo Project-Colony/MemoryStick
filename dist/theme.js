@@ -4,20 +4,20 @@
 // Gruvbox, Colony's default family. The picker is set up once the page is
 // parsed; app.js redraws the Mermaid diagrams on 'colony-theme-change'.
 
-const THEME_KEY = 'colony-theme';
 const $root = document.documentElement;
 const systemDark = matchMedia('(prefers-color-scheme: dark)');
 const themes = []; // { slug, family, mode }, from vendor/colony/themes.json
 
-function savedTheme() {
-  try {
-    return localStorage.getItem(THEME_KEY) || '';
-  } catch (_) {
-    return ''; // storage unavailable: follow the system
-  }
+// What the user chose, as main.rs saved it under Colony/MemoryStick (it
+// hands it over in window.__MEMORYSTICK__ before this script runs).
+const prefs = (window.__MEMORYSTICK__ && window.__MEMORYSTICK__.preferences) || {};
+
+function savePreferences() {
+  window.__TAURI__.core.invoke('save_preferences', { preferences: prefs })
+    .catch((err) => console.error('Preferences not saved:', err));
 }
 
-let chosenTheme = savedTheme(); // '' = follow the system
+let chosenTheme = typeof prefs.theme === 'string' ? prefs.theme : ''; // '' = follow the system
 const systemTheme = () => (systemDark.matches ? 'gruvbox-dark' : 'gruvbox-light');
 $root.dataset.colonyTheme = chosenTheme || systemTheme();
 
@@ -27,10 +27,8 @@ const isDark = () => getComputedStyle($root).getPropertyValue('color-scheme').tr
 function applyTheme(slug) {
   chosenTheme = slug;
   $root.dataset.colonyTheme = slug || systemTheme();
-  try {
-    if (slug) localStorage.setItem(THEME_KEY, slug);
-    else localStorage.removeItem(THEME_KEY);
-  } catch (_) {}
+  prefs.theme = slug || null;
+  savePreferences();
   document.getElementById('theme-select').value = slug;
   keepHighlightLegible();
   document.dispatchEvent(new Event('colony-theme-change'));

@@ -127,8 +127,13 @@ publishes them.
 
 MemoryStick has no account, telemetry, analytics, crash reporting or update
 check, and its own code makes no network requests. It keeps no history. Its
-one setting is the theme you pick, which stays in the web view's storage on
-your device.
+preferences, such as the theme you pick, are a file on your device:
+`~/.config/Colony/MemoryStick/preferences/preferences.json` on Linux,
+`%LOCALAPPDATA%\Colony\MemoryStick\preferences\preferences.json` on
+Windows and
+`~/Library/Application Support/Colony/MemoryStick/preferences/preferences.json`
+on macOS. The web view that shows documents runs in private mode, so it
+keeps nothing between runs.
 
 MemoryStick reads only the files you open yourself, through its Open
 dialog, by dropping them on its window or by naming them on the command

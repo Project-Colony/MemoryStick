@@ -7,6 +7,7 @@
     "core:event:allow-listen",
     "allow-open-document",
     "allow-load-file",
+    "allow-save-preferences",
     {
       "identifier": "opener:allow-open-url",
       "allow": [{ "url": "https://*" }, { "url": "http://*" }, { "url": "mailto:*" }]

@@ -305,7 +305,9 @@ document.addEventListener('keydown', (e) => {
   } else if ((e.ctrlKey || e.metaKey) && e.key === 'd') {
     e.preventDefault();
     toggleMode();
-  } else if ((e.ctrlKey || e.metaKey) && e.key === 'r') {
+  } else if (((e.ctrlKey || e.metaKey) && e.key === 'r') || e.key === 'F5') {
+    // F5 too: reloading the page would bring back the preferences as they
+    // were when MemoryStick started.
     e.preventDefault();
     if (currentFilePath) loadAndRender();
   }
