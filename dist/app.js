@@ -304,6 +304,10 @@ document.addEventListener('click', (e) => {
 }, true);
 
 // ===== Rendering =====
+// The elements render() drops from a document. .github/scripts/
+// check-document-filter.py fails CI if one of them goes missing.
+const DROPPED_ELEMENTS = 'meta, link, iframe, frame, frameset, object, embed, script, base, style';
+
 // The page never names a file: main.rs reads only the document the user
 // opened, through the Open dialog, a drop or the command line.
 function render(result) {
@@ -320,9 +324,7 @@ function render(result) {
   // comrak keeps raw HTML as it is, so this is the one place they are removed.
   const doc = document.createElement('template');
   doc.innerHTML = result.html;
-  doc.content
-    .querySelectorAll('meta, link, iframe, frame, frameset, object, embed, script, base, style')
-    .forEach((el) => el.remove());
+  doc.content.querySelectorAll(DROPPED_ELEMENTS).forEach((el) => el.remove());
   $content.replaceChildren(doc.content);
   $main.classList.add('has-content');
   // A document takes the window back from Preferences.
