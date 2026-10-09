@@ -310,13 +310,19 @@ function render(result) {
   currentFilePath = result.file_path;
   currentDir = dirname(currentFilePath);
 
-  // Parsed in an inert <template> first, so that the document's <meta>
-  // elements (a refresh tag navigates the window) and <link> elements
-  // (preconnect and prefetch hints reach the network) are dropped before
-  // the page ever sees them.
+  // Parsed in an inert <template> first, so that the elements a document
+  // could use to act on MemoryStick's own page are dropped before the page
+  // ever sees them: <meta> (a refresh tag navigates the window), <link>
+  // (preconnect and prefetch hints reach the network), frames, <object> and
+  // <embed> (an <iframe srcdoc> shares the page's origin and could load its
+  // scripts), <script>, <base> (it would move every relative link) and
+  // <style> (its rules would restyle the interface, not only the document).
+  // comrak keeps raw HTML as it is, so this is the one place they are removed.
   const doc = document.createElement('template');
   doc.innerHTML = result.html;
-  doc.content.querySelectorAll('meta, link').forEach((el) => el.remove());
+  doc.content
+    .querySelectorAll('meta, link, iframe, frame, frameset, object, embed, script, base, style')
+    .forEach((el) => el.remove());
   $content.replaceChildren(doc.content);
   $main.classList.add('has-content');
   // A document takes the window back from Preferences.
