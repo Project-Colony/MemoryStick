@@ -202,10 +202,14 @@ body.drag-over #drop-hint .hint-title { color: var(--colony-accent-blue); }
 
 /* ===== Markdown content =====
    .markdown-body is the document, and the preview in Preferences. */
+/* contain: paint keeps a document inside its own box: an element with an
+   inline position: fixed is placed and clipped within #content, so it
+   cannot be drawn over the toolbar or the rest of the interface. */
 #content {
   max-width: 920px;
   margin: 0 auto;
   padding: 40px 60px 100px;
+  contain: paint;
 }
 .markdown-body {
   line-height: 1.65;

@@ -15,6 +15,9 @@ pub fn render(markdown: &str) -> String {
     ext.header_id_prefix = Some("h-".to_string());
     ext.front_matter_delimiter = Some("---".to_string());
     opts.parse.smart = true;
+    // Raw HTML is kept as written (kbd, details, sub...). render() in app.js
+    // drops the elements that could act on the app's own page, such as
+    // scripts, frames and style sheets, before the document is shown.
     opts.render.r#unsafe = true;
 
     markdown_to_html(markdown, &opts)

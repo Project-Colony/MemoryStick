@@ -142,3 +142,21 @@ jobs:
 
       - name: Every theme defines the colours dist/ uses
         run: python3 .github/scripts/check-colony-themes.py
+
+  # render() in dist/app.js is the only place a document's scripts, frames
+  # and style sheets are removed (comrak keeps raw HTML as written).
+  document-filter:
+    name: Document filter
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+        working-directory: .
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: render() drops every element that could act on the page
+        run: python3 .github/scripts/check-document-filter.py

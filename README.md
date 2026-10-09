@@ -147,8 +147,9 @@ any other file, or a network share by its address, such as
 `\\server\share` on Windows. It does not upload, copy or keep these
 files.
 
-Documents can contain HTML, which is displayed, but no script contained in a
-document is ever run. The window always shows MemoryStick's own page: nothing
+Documents can contain HTML, which is displayed, apart from scripts, frames,
+embedded objects and style sheets, which are left out: no script contained in
+a document is ever run. The window always shows MemoryStick's own page: nothing
 in a document can navigate it to another page or file. Web and email links
 open in your default browser or mail app, and only when you click them;
 links to a place in the document scroll to it, and other links do nothing.
