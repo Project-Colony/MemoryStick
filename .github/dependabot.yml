@@ -3,7 +3,7 @@
 # Copied from Project-Colony-Resources templates/dependabot.yml. The one
 # difference is the cargo directory: the crate lives in src-tauri/.
 #
-# Dependabot opening a PR is not the rule being followed, merging it is. See
+# Dependabot opening a PR is not the rule being followed; merging it is. See
 # design/dependencies.md: everything is on its latest release, always.
 #
 # The libraries in dist/vendor/ (highlight.js, KaTeX, Mermaid, the Colony
@@ -16,6 +16,14 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    # The shared signing workflow stays at the organisation pin, which moves
+    # for every program at once: design/releases.md in
+    # Project-Colony-Resources, "The pin". A Dependabot PR would move one
+    # repository alone. Dependabot names that dependency after the workflow
+    # path (Project-Colony/Project-Colony-Resources/.github/workflows/...), so
+    # the rule needs the trailing wildcard to match it.
+    ignore:
+      - dependency-name: "Project-Colony/Project-Colony-Resources*"
     groups:
       actions:
         patterns: ["*"]
