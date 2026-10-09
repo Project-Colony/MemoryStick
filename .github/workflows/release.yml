@@ -40,14 +40,18 @@ jobs:
       release_created: ${{ steps.release.outputs.release_created }}
       tag_name: ${{ steps.release.outputs.tag_name }}
     steps:
+      # No `release-type` input: when it is set, the action ignores both files.
       - uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
         id: release
         with:
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
 
-      # release-please publishes the release before any binary exists. Held as
-      # a draft; sign-and-publish refuses anything else and publishes it last.
+      # release-please publishes the release, and moves /releases/latest,
+      # before any binary exists. Held as a draft; sign-and-publish refuses
+      # anything else and publishes it last. `-R` is not optional: this job has
+      # no checkout, so `gh` has no git remote to infer the repository from,
+      # and a failure here used to publish the tag with no assets at all.
       - name: Hold the release as a draft
         if: steps.release.outputs.release_created == 'true'
         env:
@@ -89,8 +93,12 @@ jobs:
           ref: ${{ needs.release-please.outputs.tag_name || inputs.tag }}
           persist-credentials: false
 
-      - uses: dtolnay/rust-toolchain@89b12181fb390509a0842a86cc55eeb8eb928c1d # stable branch
+      # Pinned to master with `toolchain: stable` rather than to the `stable`
+      # branch: that branch is rebased onto every master commit, so a SHA
+      # pinned on it stops being reachable from any branch.
+      - uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f # master, 2026-10-09
         with:
+          toolchain: stable
           targets: ${{ matrix.target }}
 
       # No build cache here: SignPath forbids release builds that reuse
@@ -154,9 +162,9 @@ jobs:
       # MemoryStick answers --version before it opens a window, so the
       # binary can run here without a display: this proves it starts and
       # carries the tag's version. Not on the x86_64 macOS leg, which is
-      # cross-built on an arm64 runner.
+      # cross-built on an arm64 runner: the next step checks that one.
       - name: Smoke test
-        if: matrix.asset != 'memorystick-macos-x86'
+        if: matrix.target != 'x86_64-apple-darwin'
         shell: bash
         env:
           ASSET: ${{ matrix.asset }}
@@ -168,6 +176,19 @@ jobs:
             echo "::error::$ASSET --version printed '$out', expected 'memorystick ${TAG#v}'"
             exit 1
           fi
+
+      # The Intel macOS artifact is cross-compiled on an arm64 runner and
+      # cannot be executed there, so assert its architecture instead: that is
+      # the leg with the fewest users, where a regression survives longest.
+      - name: Check the cross-compiled artifact's architecture
+        if: matrix.target == 'x86_64-apple-darwin'
+        shell: bash
+        env:
+          ASSET: ${{ matrix.asset }}
+        run: |
+          file "$ASSET"
+          file "$ASSET" | grep -q 'x86_64' \
+            || { echo "::error::$ASSET is not an x86_64 binary"; exit 1; }
 
       # SignPath only signs an exe whose version resource names the project
       # and carries the release version. tauri-build writes both, from
@@ -196,6 +217,11 @@ jobs:
           if-no-files-found: error
           retention-days: 1
 
+  # In the same run as the builds, chained by `needs:` rather than
+  # `on: release`: a release created with the default GITHUB_TOKEN fires no
+  # release events, so a workflow written that way never runs. Pinned to the
+  # organisation's commit of the shared workflow; design/releases.md says when
+  # that pin moves.
   sign-and-publish:
     needs: [release-please, build]
     if: ${{ !cancelled() && needs.build.result == 'success' }}
@@ -203,7 +229,7 @@ jobs:
     permissions:
       actions: read
       contents: write
-    uses: Project-Colony/Project-Colony-Resources/.github/workflows/sign-and-publish.yml@619460ff4dc0049f129955f0988d368427b9eedb # main
+    uses: Project-Colony/Project-Colony-Resources/.github/workflows/sign-and-publish.yml@619460ff4dc0049f129955f0988d368427b9eedb # organisation pin
     with:
       tag: ${{ needs.release-please.outputs.tag_name || inputs.tag }}
       assets: "memorystick-linux memorystick-windows.exe memorystick-macos memorystick-macos-x86"
@@ -211,6 +237,9 @@ jobs:
       # Uncomment once SignPath has approved this project and its project
       # exists in the Project-Colony SignPath organisation:
       # signpath-project-slug: "memorystick"
+      # Leave the default `code-signing-policy: true` only while README.md has
+      # a "## Code signing policy" section (templates/program/README.md has
+      # one): the release notes link to it.
     # Named, not `inherit`: the called workflow gets these two and nothing else.
     secrets:
       COLONY_SIGNING_KEY_PEM: ${{ secrets.COLONY_SIGNING_KEY_PEM }}
