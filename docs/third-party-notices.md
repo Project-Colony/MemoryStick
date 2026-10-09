@@ -28,5 +28,11 @@ the source maps do not list. The full list, with versions and licence
 texts, is in
 [dist/vendor/mermaid/LICENSE](../dist/vendor/mermaid/LICENSE).
 
+Mermaid is held on 11.x on purpose. Mermaid 12 depends on elkjs `^0.9.3`, and
+elkjs before 0.12 is licensed under EPL-2.0 only, which is not compatible with
+MemoryStick's GPL-3.0-or-later. elkjs 0.12 and later are available under
+EPL-2.0 OR GPL-3.0-or-later, so the hold can be lifted once a Mermaid release
+depends on elkjs 0.12 or later.
+
 The Rust crates compiled into the executable are listed in
 [`src-tauri/Cargo.lock`](../src-tauri/Cargo.lock).

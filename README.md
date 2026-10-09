@@ -14,11 +14,16 @@ code hosting site. MemoryStick opens the file in a window of its own and
 renders it the way GitHub does, with highlighted code, math, Mermaid diagrams
 and a table of contents, from a single executable.
 
-> **Status:** the viewer has been in use under its former name, MD Viewer.
-> Nothing has been released under the MemoryStick name yet; the
-> first release, signed by the Project-Colony organisation, is pending. CI
-> builds and tests the Rust side on Linux, Windows and macOS, but nothing in CI
-> opens the window, so the interface is only checked by hand.
+> **Status:** released. Since v0.1.0, every MemoryStick release is built in
+> CI from a release-please tag, signed by the Project-Colony organisation, and
+> verified by Colony before it installs or updates it. Before joining Project
+> Colony, the viewer was in use under its former name, MD Viewer. CI builds and
+> tests the Rust side (Markdown rendering, which files a document may read, the
+> preferences) on Linux, Windows and macOS, and on Rust 1.90, the oldest
+> supported version. The release workflow checks that each executable answers
+> `--version` with the release's version, and that the Intel macOS build is an
+> x86_64 binary. Nothing in CI opens the window, so the interface, Preferences,
+> the themes and the French translation are checked by hand.
 
 ## Why MemoryStick
 
@@ -112,56 +117,85 @@ JavaScript embedded in the executable at build time.
 
 ## Code signing policy
 
-Free code signing provided by [SignPath.io](https://signpath.io), certificate by [SignPath Foundation](https://signpath.org).
+Every release asset is signed by the Project Colony organisation in CI, never on
+a developer machine. Next to each asset on the release page:
 
-Windows builds are signed this way once the SignPath Foundation has accepted
-the project; until then they ship without Authenticode. Every release asset,
-on every platform, is always signed with the Project-Colony organisation's
-ed25519 key, which Colony verifies before installing it. Releases are cut by
-release-please: merging its release pull request tags the version, and the
-release workflow builds the four executables from that tag, signs them and
-publishes them.
+| File | What it is |
+|---|---|
+| `<asset>.sig` | an ed25519 signature over the asset, made with the organisation's release key |
+| `<asset>.meta` | three lines binding the asset to its file name, its sha256 and the release version |
+| `<asset>.meta.sig` | an ed25519 signature over the `.meta` |
+
+The private key is an organisation secret, used only by the shared
+[sign-and-publish workflow](https://github.com/Project-Colony/Project-Colony-Resources/blob/main/.github/workflows/sign-and-publish.yml)
+in a job that builds nothing; the jobs that compile MemoryStick never see it.
+Colony checks all three files before it installs or updates MemoryStick, and
+refuses a release older than the one installed. To check a download yourself
+with OpenSSL 3 (the same commands work for every asset):
+
+```bash
+cat > colony-release.pub <<'EOF'
+-----BEGIN PUBLIC KEY-----
+MCowBQYDK2VwAyEARNjg3Nn8H6/aBg1unwGjkUTcrdTxERNefVaqU8cFu0s=
+-----END PUBLIC KEY-----
+EOF
+a=memorystick-linux
+openssl pkeyutl -verify -pubin -inkey colony-release.pub -rawin -in "$a" -sigfile "$a.sig"
+openssl pkeyutl -verify -pubin -inkey colony-release.pub -rawin -in "$a.meta" -sigfile "$a.meta.sig"
+cat "$a.meta"     # version=<tag>, asset=<file name>, sha256=<digest>
+sha256sum "$a"    # the digest must equal the sha256 line
+```
+
+How releases are built, signed and published:
+[design/releases.md](https://github.com/Project-Colony/Project-Colony-Resources/blob/main/design/releases.md#5-signing).
+
+<!--
+Add the following only once SignPath signs the Windows build, that is once
+`signpath-project-slug` is set in .github/workflows/release.yml. Before that it
+would promise a signature the .exe does not carry.
+
+Windows releases are also Authenticode-signed. Free code signing provided by
+[SignPath.io](https://about.signpath.io/), certificate by
+[SignPath Foundation](https://signpath.org/).
 
 - Committers and reviewers: [MotherSphere](https://github.com/MotherSphere)
 - Approvers: [MotherSphere](https://github.com/MotherSphere)
+-->
 
-### Privacy policy
+## Privacy
 
-MemoryStick has no account, telemetry, analytics, crash reporting or update
-check, and its own code makes no network requests. It keeps no history. Its
-preferences, such as the theme you pick, are a file on your device:
-`~/.config/Colony/MemoryStick/preferences/preferences.json` on Linux,
-`%LOCALAPPDATA%\Colony\MemoryStick\preferences\preferences.json` on
-Windows and
-`~/Library/Application Support/Colony/MemoryStick/preferences/preferences.json`
-on macOS. The web view that shows documents runs in private mode, so it
-keeps nothing between runs.
+MemoryStick has no account and sends no telemetry, no analytics and no crash
+reports. It has no update check: updates come through Colony.
 
-MemoryStick reads only the files you open yourself, through its Open
-dialog, by dropping them on its window or by naming them on the command
-line, and only Markdown and text files (`.md`, `.markdown`, `.mdown`,
-`.mkd`, `.mkdn` and `.txt`). It also reads the images a document shows
-(PNG, JPEG, GIF, WebP, AVIF, SVG, BMP and ICO files), but only from that
-document's folder and the folders inside it. A document cannot make it open
-any other file, or a network share by its address, such as
-`\\server\share` on Windows. It does not upload, copy or keep these
-files.
+| Data | Stored or sent | Where, and why |
+|---|---|---|
+| Preferences | stored | `Colony/MemoryStick/preferences/preferences.json` in this machine's config directory: `~/.config/` on Linux, `%LOCALAPPDATA%\` on Windows, `~/Library/Application Support/` on macOS. Theme, accent colour, text size, language and the other choices in Preferences, so they are back next time. |
+| Web view folder | stored | `~/.cache/Colony/MemoryStick/webview/` on Linux, `%LOCALAPPDATA%\Colony\MemoryStick\cache\webview\` on Windows; on macOS WebKit keeps its own. The web view runs in private mode, so it keeps no page, cookie or history there between runs. |
+| The document you open | read, never stored | The `.md`, `.markdown`, `.mdown`, `.mkd`, `.mkdn` or `.txt` file you pick in the Open dialog, drop on the window or name on the command line, up to 32 MiB. MemoryStick does not upload, copy or keep it, and keeps no list of opened files. |
+| Images in that document | read, never stored | PNG, JPEG, GIF, WebP, AVIF, SVG, BMP and ICO files, only from the document's folder and the folders inside it, to show them in the page. |
+| Recent files | stored by the operating system | The system's Open dialog may add the file you pick to the system's recent files list (Windows recent items, `~/.local/share/recently-used.xbel` with GTK on Linux). MemoryStick does not write or control that list. |
 
-Documents can contain HTML, which is displayed, apart from scripts, frames,
-embedded objects and style sheets, which are left out: no script contained in
-a document is ever run. The window always shows MemoryStick's own page: nothing
-in a document can navigate it to another page or file. Web and email links
-open in your default browser or mail app, and only when you click them;
-links to a place in the document scroll to it, and other links do nothing.
+A document cannot make MemoryStick read any other file, or a network share by
+its address, such as `\\server\share` on Windows. Documents can contain HTML,
+which is displayed, apart from scripts, frames, embedded objects and style
+sheets, which are left out: no script contained in a document is ever run. The
+window always shows MemoryStick's own page: nothing in a document can navigate
+it to another page or file.
 
-Nothing in a document can make MemoryStick reach the network: images,
-style sheets, fonts, frames, audio and video hosted on the web are never
-loaded, so a document shows an image only when it is on your device. A web
-link reaches the network only through your browser, once you click it.
+MemoryStick connects to no server. Nothing in a document can make it reach the
+network: images, style sheets, fonts, frames, audio and video hosted on the web
+are never loaded, so a document shows an image only when it is on your device.
+Web and email links open in your default browser or mail app, and only when you
+click them; links to a place in the document scroll to it, and other links do
+nothing.
 
 MemoryStick's interface is rendered by the operating system's web view
 (Microsoft Edge WebView2 on Windows, WebKit on macOS and Linux), which follows
 its vendor's own privacy policy.
+
+This program will not transfer any information to other networked systems
+unless specifically requested by the user or the person installing or operating
+it.
 
 ## License
 
