@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.1.1](https://github.com/Project-Colony/MemoryStick/compare/v0.1.0...v0.1.1) (2026-10-09)
+
+
+### Fixes
+
+* keep a document's frames, scripts and styles from reaching MemoryStick's own page ([#7](https://github.com/Project-Colony/MemoryStick/issues/7)) ([30b485e](https://github.com/Project-Colony/MemoryStick/commit/30b485e48a7e0e3340934a17093a9d2d5d523775))
+
+
+### Documentation
+
+* say MemoryStick is released and signed, and match the README to the Colony template ([#11](https://github.com/Project-Colony/MemoryStick/issues/11)) ([3c6c655](https://github.com/Project-Colony/MemoryStick/commit/3c6c6557abae2bc429d3dd0b9e4677cb8393a065))
+
 ## 0.1.0 (2026-10-08)
 
 
