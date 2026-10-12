@@ -34,5 +34,22 @@ MemoryStick's GPL-3.0-or-later. elkjs 0.12 and later are available under
 EPL-2.0 OR GPL-3.0-or-later, so the hold can be lifted once a Mermaid release
 depends on elkjs 0.12 or later.
 
-The Rust crates compiled into the executable are listed in
-[`src-tauri/Cargo.lock`](../src-tauri/Cargo.lock).
+## Rust libraries
+
+The executable also links the Rust crates its code is built on: Tauri,
+comrak, serde and the libraries they depend on, about 300 of them, mostly
+under MIT, Apache-2.0, BSD or ISC. Their licence texts travel inside every
+build, and Preferences > About > Third-party licences shows them.
+
+`src-tauri/build.rs` collects them at build time. It asks
+`cargo metadata --locked --offline --filter-platform <target>` for the
+dependency graph, follows the normal dependencies of `memorystick` (build
+and dev dependencies run on the build machine and are not linked in), and
+reads every `LICENSE*`, `LICENCE*`, `UNLICENSE*`, `COPYING*`, `COPYRIGHT*`
+and `NOTICE*` file, plus any declared `license-file`, at the top of each
+crate Cargo downloaded to build it. Identical texts are kept once, under
+the list of crates that ship them. A crate that ships no licence file is
+listed with the SPDX expression from its manifest, whose standard text is
+at https://spdx.org/licenses/. The result is embedded in the executable,
+so each platform's build carries the notices of exactly the crates it
+links, and the build needs no network beyond what Cargo already fetched.

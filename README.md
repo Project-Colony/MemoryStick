@@ -206,5 +206,8 @@ version. The full text is in [LICENSE](LICENSE).
 The libraries in `dist/vendor/` keep their own licences: BSD-3-Clause for
 highlight.js, MIT for KaTeX and Mermaid, OFL-1.1 for the KaTeX fonts,
 GPL-3.0-or-later for the Colony themes, and those of the packages Mermaid's
-build contains. The fonts in `dist/fonts/` are under OFL-1.1. See
+build contains. The fonts in `dist/fonts/` are under OFL-1.1. The Rust
+libraries compiled into the executable keep theirs too, mostly MIT,
+Apache-2.0, BSD and ISC, and Preferences > About > Third-party licences
+shows their texts. See
 [docs/third-party-notices.md](docs/third-party-notices.md).

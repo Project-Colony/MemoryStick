@@ -522,6 +522,18 @@ body.drag-over #drop-hint .hint-title { color: var(--colony-accent-blue); }
   cursor: pointer;
 }
 .link-button:hover { background: var(--colony-btn-hover); }
+.licenses {
+  max-height: 360px;
+  margin: 0;
+  padding: 12px;
+  overflow: auto;
+  border: 1px solid var(--colony-border-subtle);
+  border-radius: 8px;
+  font-family: var(--mono);
+  font-size: calc(12px * var(--font-scale));
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
 
 /* ===== Toast ===== */
 #toast {

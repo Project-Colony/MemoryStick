@@ -2,6 +2,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod document;
+mod licenses;
 mod markdown;
 mod navigation;
 mod preferences;
@@ -55,7 +56,8 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             document::open_document,
             document::load_file,
-            preferences::save_preferences
+            preferences::save_preferences,
+            licenses::third_party_licenses
         ])
         .on_window_event(document::on_window_event)
         // The window is built here rather than from tauri.conf.json alone,

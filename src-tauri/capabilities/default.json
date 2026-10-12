@@ -8,6 +8,7 @@
     "allow-open-document",
     "allow-load-file",
     "allow-save-preferences",
+    "allow-third-party-licenses",
     {
       "identifier": "opener:allow-open-url",
       "allow": [{ "url": "https://*" }, { "url": "http://*" }, { "url": "mailto:*" }]
