@@ -131,7 +131,7 @@ function isAbsolute(p) {
 function postProcess() {
   // 1) Relative images: convertFileSrc(absolute path). Other sources are
   //    left as they are; whether a web (http, https) image loads is up to
-  //    img-src in the CSP (src-tauri/tauri.conf.json).
+  //    img-src in the CSP (tauri.conf.json at the repository root).
   if (currentDir) {
     $content.querySelectorAll('img').forEach(img => {
       const src = img.getAttribute('src') || '';

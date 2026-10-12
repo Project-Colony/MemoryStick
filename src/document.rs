@@ -77,7 +77,7 @@ impl Opened {
 }
 
 /// Why a document could not be read, for the page to say in the user's
-/// language: an error_* key of dist/i18n/, and what fills in its {detail}.
+/// language: an error_* key of ui/i18n/, and what fills in its {detail}.
 #[derive(Debug, PartialEq, Serialize)]
 pub struct Failure {
     key: &'static str,

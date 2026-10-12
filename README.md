@@ -97,15 +97,16 @@ Linux (for example `libwebkit2gtk-4.1-0` on Debian and Ubuntu,
 ```bash
 git clone https://github.com/Project-Colony/MemoryStick
 cd MemoryStick
-cargo build --release --locked --manifest-path src-tauri/Cargo.toml
+cargo build --release --locked
 ```
 
 Requires Rust 1.90 or newer and, on Linux, the WebKitGTK 4.1 development
 package (`libwebkit2gtk-4.1-dev` on Debian and Ubuntu). The executable is
-`src-tauri/target/release/memorystick`. No Tauri CLI or Node.js is needed:
-`src-tauri/` is the Rust application, which reads a file and renders its
-Markdown to HTML, and `dist/` is the interface, plain HTML, CSS and
-JavaScript embedded in the executable at build time.
+`target/release/memorystick`. No Tauri CLI or Node.js is needed: `src/` is
+the Rust application, which reads a file and renders its Markdown to HTML,
+and `src/ui/` is the interface, plain HTML, CSS and JavaScript embedded in
+the executable at build time. `assets/icons/` holds the program's icons and
+`config/capabilities/` the commands the interface may call.
 
 ## Documentation
 
@@ -203,10 +204,10 @@ GPL-3.0-or-later. You may redistribute and modify MemoryStick under the terms
 of version 3 of the GNU General Public License, or (at your option) any later
 version. The full text is in [LICENSE](LICENSE).
 
-The libraries in `dist/vendor/` keep their own licences: BSD-3-Clause for
+The libraries in `src/ui/vendor/` keep their own licences: BSD-3-Clause for
 highlight.js, MIT for KaTeX and Mermaid, OFL-1.1 for the KaTeX fonts,
 GPL-3.0-or-later for the Colony themes, and those of the packages Mermaid's
-build contains. The fonts in `dist/fonts/` are under OFL-1.1. The Rust
+build contains. The fonts in `src/ui/fonts/` are under OFL-1.1. The Rust
 libraries compiled into the executable keep theirs too, mostly MIT,
 Apache-2.0, BSD and ISC, and Preferences > About > Third-party licences
 shows their texts. See

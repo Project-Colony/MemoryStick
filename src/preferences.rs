@@ -57,8 +57,8 @@ pub async fn save_preferences(preferences: Map<String, Value>) -> Result<(), Str
 
 /// The interface's text, in each of its two languages (design/i18n.md in
 /// Project-Colony-Resources: English is canonical, French complete).
-const STRINGS_EN: &str = include_str!("../../dist/i18n/en.json");
-const STRINGS_FR: &str = include_str!("../../dist/i18n/fr.json");
+const STRINGS_EN: &str = include_str!("ui/i18n/en.json");
+const STRINGS_FR: &str = include_str!("ui/i18n/fr.json");
 
 /// Runs before any script of the page: window.__MEMORYSTICK__ holds the
 /// version, the saved preferences and the interface's text, so the first

@@ -19,6 +19,7 @@ function savePreferences() {
 }
 
 // Every family, variant and accent (vendor/colony/themes.json), once loaded.
+// The accents' colours come from colony-accents.css, through accentColor().
 let themeList = { families: [], accents: [] };
 const themeListLoaded = fetch('vendor/colony/themes.json')
   .then((response) => response.json())
@@ -26,6 +27,18 @@ const themeListLoaded = fetch('vendor/colony/themes.json')
   .catch((err) => console.error('Colony theme list unavailable:', err));
 
 const cssVar = (name) => getComputedStyle($root).getPropertyValue(name).trim();
+
+// An accent's colour, from the :root rule of vendor/colony/colony-accents.css,
+// the one file the swatches and the override both read. Not from the page:
+// every theme sets its own --colony-accent-blue, which wins there, so the
+// page would give the theme's accent for the blue one.
+function accentColor(accent) {
+  const rule = [...document.styleSheets]
+    .filter((sheet) => sheet.href && sheet.href.endsWith('/colony-accents.css'))
+    .flatMap((sheet) => [...sheet.cssRules])
+    .find((r) => r.selectorText === ':root');
+  return rule ? rule.style.getPropertyValue(accent.cssVar).trim() : '';
+}
 const isDark = () => cssVar('color-scheme') === 'dark';
 const systemTheme = () => (systemDark.matches ? 'gruvbox-dark' : 'gruvbox-light');
 
@@ -90,7 +103,7 @@ function applyAppearance() {
 
   // No override, or auto accent, leaves the theme's own accent.
   const accent = !prefs.autoAccent && themeList.accents.find((a) => a.key === prefs.accent);
-  if (accent) $root.style.setProperty('--colony-accent-blue', accent.color);
+  if (accent) $root.style.setProperty('--colony-accent-blue', accentColor(accent));
 
   if (prefs.highContrast) {
     // colony_ui's is_light: YIQ luma of the background over 0.5.
