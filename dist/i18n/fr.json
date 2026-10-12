@@ -77,5 +77,7 @@
   "preferences_about_desc": "Une visionneuse Markdown du projet Colony.",
   "preferences_version": "Version {detail}",
   "preferences_license": "Logiciel libre sous licence publique générale GNU, version 3 ou ultérieure.",
-  "preferences_source": "Code source"
+  "preferences_source": "Code source",
+  "preferences_third_party": "Licences tierces",
+  "preferences_third_party_desc": "Les bibliothèques Rust compilées dans MemoryStick, chacune avec le texte de licence qu'elle fournit."
 }

@@ -155,6 +155,23 @@ function preview() {
       h('span.hljs-comment', {}, '// ' + t('preferences_section_preview')), '\n    println!(', h('span.hljs-string', {}, '"MemoryStick"'), ');\n}')));
 }
 
+// ===== About =====
+
+// The licence texts of the Rust libraries, asked of the app the first time
+// their section opens: a promise while that is pending, then the text.
+let licenses = null;
+
+function licenseText() {
+  if (licenses === null) {
+    licenses = invoke('third_party_licenses')
+      .then((text) => { licenses = text; renderPreferences(); })
+      .catch((err) => { licenses = null; showToast(t('error_interface', err), true); });
+  }
+  // Focusable, so the keyboard can scroll it.
+  return typeof licenses === 'string'
+    && h('pre.licenses', { tabindex: '0', 'aria-label': t('preferences_third_party') }, licenses);
+}
+
 // ===== Categories =====
 
 const PAGES = {
@@ -205,6 +222,8 @@ const PAGES = {
       onclick: () => invoke('plugin:opener|open_url', { url: 'https://github.com/Project-Colony/MemoryStick' })
         .catch((err) => showToast(t('error_cannot_open_link', err), true)),
     }, t('preferences_source')),
+    section('third-party', t('preferences_third_party'), t('preferences_third_party_desc'),
+      expanded.has('third-party') && licenseText()),
   ],
 };
 
