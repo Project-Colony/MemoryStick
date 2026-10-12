@@ -1,6 +1,8 @@
 # Rust / Cargo
-src-tauri/target/
-src-tauri/gen/schemas/
+/target/
+# Written by tauri-build on every build
+/gen/schemas/
+/permissions/
 **/*.rs.bk
 
 # Node (should a bundler ever be added)

@@ -134,13 +134,14 @@ function accentPicker() {
     themeList.accents.map((accent) => {
       const selected = !prefs.autoAccent && prefs.accent === accent.key;
       const name = accent.label[locale] || accent.label.en;
+      const color = accentColor(accent);
       return h('button.accent', {
         role: 'radio',
         'aria-checked': String(selected),
         'aria-label': name,
         title: name,
         'data-id': `accent-${accent.key}`,
-        style: { '--swatch': accent.color, color: ink(accent.color) },
+        style: { '--swatch': color, color: ink(color) },
         onclick: () => change((p) => { p.accent = accent.key; p.autoAccent = false; }),
       }, selected ? icon(GLYPH.check) : '');
     }));

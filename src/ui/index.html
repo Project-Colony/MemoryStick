@@ -7,8 +7,11 @@
   <!-- No <style> element here: Tauri would give it a nonce in style-src,
        and the web view would then ignore the 'unsafe-inline' that KaTeX and
        Mermaid need for their inline styles. The policy is "csp" in
-       src-tauri/tauri.conf.json. -->
+       tauri.conf.json at the repository root. -->
   <title>MemoryStick</title>
+  <!-- Accents before themes: both set --colony-accent-blue on the root, so
+       the later file, the theme's own accent, is the one that applies. -->
+  <link rel="stylesheet" href="vendor/colony/colony-accents.css">
   <link rel="stylesheet" href="vendor/colony/colony-themes.css">
   <link rel="stylesheet" href="vendor/katex/katex.min.css">
   <link rel="stylesheet" href="styles.css">

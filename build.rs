@@ -10,16 +10,20 @@ fn main() {
     write_rust_licenses();
 
     // Declaring the app's commands turns on Tauri's permission check for
-    // them, so they answer only the pages that capabilities/ allows: the
-    // app's own page, never a page from anywhere else.
-    tauri_build::try_build(tauri_build::Attributes::new().app_manifest(
-        tauri_build::AppManifest::new().commands(&[
-            "open_document",
-            "load_file",
-            "save_preferences",
-            "third_party_licenses",
-        ]),
-    ))
+    // them, so they answer only the pages that config/capabilities/ allows:
+    // the app's own page, never a page from anywhere else. tauri-build
+    // watches only its default capabilities/ folder, so this one is named.
+    println!("cargo:rerun-if-changed=config/capabilities");
+    tauri_build::try_build(
+        tauri_build::Attributes::new()
+            .capabilities_path_pattern("config/capabilities/**/*")
+            .app_manifest(tauri_build::AppManifest::new().commands(&[
+                "open_document",
+                "load_file",
+                "save_preferences",
+                "third_party_licenses",
+            ])),
+    )
     .expect("tauri-build failed");
 }
 

@@ -1192,7 +1192,7 @@
         "fr": "Dracula",
         "en": "Dracula"
       },
-      "icon": "f6e2",
+      "icon": "eefe",
       "notes": null,
       "variants": [
         {
@@ -3780,7 +3780,7 @@
         "en": "Stellar Blade"
       },
       "icon": "f04e5",
-      "notes": "Fan-made and unofficial. No official colour codes exist for these\ncharacters; every hex is derived from screenshots the user provided (hair,\nsuit, glow, material). Palettes are not copyrightable and no game art ships\nwith this set. Adam and Roxanne are still pending reference images.\n",
+      "notes": "Fan-made and unofficial. No official colour codes exist for these\ncharacters; every hex is derived from reference screenshots (hair, suit,\nglow, material). Palettes are not copyrightable and no game art ships\nwith this set. Adam and Roxanne are still pending reference images.\n",
       "variants": [
         {
           "key": "eve",

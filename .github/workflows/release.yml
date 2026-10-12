@@ -115,15 +115,15 @@ jobs:
       # --locked: release-please bumps Cargo.lock with Cargo.toml, so the tag
       # builds exactly the dependency versions it records.
       - name: Build
-        run: cargo build --release --locked --target ${{ matrix.target }} --manifest-path src-tauri/Cargo.toml
+        run: cargo build --release --locked --target ${{ matrix.target }}
 
       - name: Stage binary (Unix)
         if: runner.os != 'Windows'
-        run: cp src-tauri/target/${{ matrix.target }}/release/memorystick ${{ matrix.asset }}
+        run: cp target/${{ matrix.target }}/release/memorystick ${{ matrix.asset }}
 
       - name: Stage binary (Windows)
         if: runner.os == 'Windows'
-        run: copy src-tauri\target\${{ matrix.target }}\release\memorystick.exe ${{ matrix.asset }}
+        run: copy target\${{ matrix.target }}\release\memorystick.exe ${{ matrix.asset }}
 
       # A manifest can PARSE perfectly and still leave the program listed in
       # Colony with no Download button, because none of its assets match a
@@ -192,7 +192,7 @@ jobs:
 
       # SignPath only signs an exe whose version resource names the project
       # and carries the release version. tauri-build writes both, from
-      # productName in tauri.conf.json and the version in src-tauri/Cargo.toml.
+      # productName in tauri.conf.json and the version in Cargo.toml.
       - name: Check the Windows version resource
         if: runner.os == 'Windows'
         shell: pwsh

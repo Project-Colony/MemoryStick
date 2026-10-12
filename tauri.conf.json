@@ -1,9 +1,9 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "MemoryStick",
-  "identifier": "com.memorystick.app",
+  "identifier": "io.github.project-colony.memorystick",
   "build": {
-    "frontendDist": "../dist",
+    "frontendDist": "src/ui",
     "devUrl": "http://localhost:1420",
     "beforeDevCommand": "",
     "beforeBuildCommand": ""
@@ -43,11 +43,11 @@
     "active": true,
     "targets": "all",
     "icon": [
-      "icons/32x32.png",
-      "icons/128x128.png",
-      "icons/128x128@2x.png",
-      "icons/icon.icns",
-      "icons/icon.ico"
+      "assets/icons/32x32.png",
+      "assets/icons/128x128.png",
+      "assets/icons/128x128@2x.png",
+      "assets/icons/icon.icns",
+      "assets/icons/icon.ico"
     ],
     "category": "Productivity",
     "shortDescription": "A Markdown viewer",

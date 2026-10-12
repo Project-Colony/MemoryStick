@@ -19,10 +19,6 @@ concurrency:
 env:
   CARGO_TERM_COLOR: always
 
-defaults:
-  run:
-    working-directory: src-tauri
-
 jobs:
   test:
     name: test ${{ matrix.os }}
@@ -48,7 +44,6 @@ jobs:
       - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
         with:
           key: ci-${{ matrix.os }}
-          workspaces: src-tauri -> target
 
       # Same list as the release workflow.
       - name: Install Linux Tauri dependencies
@@ -101,7 +96,7 @@ jobs:
         id: msrv
         run: |
           version=$(sed -n 's/^rust-version = "\(.*\)"$/\1/p' Cargo.toml)
-          [ -n "$version" ] || { echo "::error::could not read rust-version from src-tauri/Cargo.toml"; exit 1; }
+          [ -n "$version" ] || { echo "::error::could not read rust-version from Cargo.toml"; exit 1; }
           echo "version=$version" >> "$GITHUB_OUTPUT"
 
       - uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f # master, 2026-10-09
@@ -111,7 +106,6 @@ jobs:
       - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
         with:
           key: msrv-${{ steps.msrv.outputs.version }}
-          workspaces: src-tauri -> target
 
       - name: Install Linux Tauri dependencies
         run: |
@@ -127,11 +121,11 @@ jobs:
     defaults:
       run:
         shell: bash
-        working-directory: .
     env:
-      # The Project-Colony-Resources commit colony-ui 0.1.5 was published
-      # from. Bump it together with dist/vendor/colony/README.md.
-      COLONY_RESOURCES_REV: edc7495de15e75553b9203e85d58e4452be67b3a
+      # A Project-Colony-Resources commit whose generated/ matches the one
+      # colony-ui 0.1.6 was published from. Bump it together with
+      # src/ui/vendor/colony/README.md.
+      COLONY_RESOURCES_REV: 7247b814fd9afbb17e3c4f44315ec9333c3a31b0
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -141,13 +135,14 @@ jobs:
       - name: Vendored files match Project-Colony-Resources
         run: |
           base="https://raw.githubusercontent.com/Project-Colony/Project-Colony-Resources/$COLONY_RESOURCES_REV/generated"
-          curl -fsSL --retry 3 "$base/css/colony-themes.css" | cmp - dist/vendor/colony/colony-themes.css
-          curl -fsSL --retry 3 "$base/themes.json" | cmp - dist/vendor/colony/themes.json
+          curl -fsSL --retry 3 "$base/css/colony-themes.css" | cmp - src/ui/vendor/colony/colony-themes.css
+          curl -fsSL --retry 3 "$base/css/colony-accents.css" | cmp - src/ui/vendor/colony/colony-accents.css
+          curl -fsSL --retry 3 "$base/themes.json" | cmp - src/ui/vendor/colony/themes.json
 
-      - name: Every theme defines the colours dist/ uses
+      - name: Every theme defines the colours src/ui/ uses
         run: python3 .github/scripts/check-colony-themes.py
 
-  # render() in dist/app.js is the only place a document's scripts, frames
+  # render() in src/ui/app.js is the only place a document's scripts, frames
   # and style sheets are removed (comrak keeps raw HTML as written).
   document-filter:
     name: Document filter
@@ -155,7 +150,6 @@ jobs:
     defaults:
       run:
         shell: bash
-        working-directory: .
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

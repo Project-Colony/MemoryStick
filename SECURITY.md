@@ -37,5 +37,5 @@ reach users without the Project-Colony organisation's signature.
 
 Out of scope: bugs in the operating system's web view (WebView2, WebKit,
 WebKitGTK), which belong to its vendor, and in the libraries under
-`dist/vendor/`, which belong to their projects. Do tell us if a MemoryStick
+`src/ui/vendor/`, which belong to their projects. Do tell us if a MemoryStick
 release ships a vulnerable version of one of them.
