@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.2.0](https://github.com/Project-Colony/MemoryStick/compare/v0.1.1...v0.2.0) (2026-10-12)
+
+
+### Features
+
+* use the shared Colony accent colours and current themes, and adopt the Colony repository layout ([#14](https://github.com/Project-Colony/MemoryStick/issues/14)) ([91ca2b2](https://github.com/Project-Colony/MemoryStick/commit/91ca2b2f1fa030cfdffcfa4c610720cf0be8132b))
+
+
+### Fixes
+
+* ship the licences of the Rust libraries inside MemoryStick ([#12](https://github.com/Project-Colony/MemoryStick/issues/12)) ([86282e2](https://github.com/Project-Colony/MemoryStick/commit/86282e2b91cab8a86cc35b738f943ed0bb60239c))
+
 ## [0.1.1](https://github.com/Project-Colony/MemoryStick/compare/v0.1.0...v0.1.1) (2026-10-09)
 
 
