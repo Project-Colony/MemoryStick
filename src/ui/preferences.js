@@ -126,10 +126,6 @@ function themePicker() {
 }
 
 function accentPicker() {
-  // The check takes whichever of the theme's text and background reads
-  // better on the swatch.
-  const ink = (color) => [cssVar('--colony-text-primary'), cssVar('--colony-bg-primary')]
-    .sort((a, b) => contrast(b, color) - contrast(a, color))[0];
   return h('div.accents', { role: 'radiogroup', 'aria-label': t('preferences_section_colors') },
     themeList.accents.map((accent) => {
       const selected = !prefs.autoAccent && prefs.accent === accent.key;
@@ -141,7 +137,7 @@ function accentPicker() {
         'aria-label': name,
         title: name,
         'data-id': `accent-${accent.key}`,
-        style: { '--swatch': color, color: ink(color) },
+        style: { '--swatch': color, color: onAccent(color) },
         onclick: () => change((p) => { p.accent = accent.key; p.autoAccent = false; }),
       }, selected ? icon(GLYPH.check) : '');
     }));
@@ -191,6 +187,9 @@ const PAGES = {
       toggle('auto-accent', t('preferences_auto_accent'), t('preferences_auto_accent_desc'),
         prefs.autoAccent === true, (p) => { p.autoAccent = !p.autoAccent; })),
     section('typography', t('preferences_section_typography'), t('preferences_typography_desc'),
+      // Read-only: the dyslexia font, in Accessibility, is the only choice.
+      setting(t('preferences_font_family'), t('preferences_font_family_desc'),
+        h('span.setting-value', { 'data-id': 'font-family' }, prefs.dyslexiaFont === true ? 'OpenDyslexic' : 'JetBrainsMono Nerd Font')),
       choice('font-size', t('preferences_font_size'), t('preferences_font_size_desc'),
         sizeOptions(['small', 'default', 'large']),
         ['small', 'large'].includes(prefs.fontSize) ? prefs.fontSize : 'default', (p, v) => { p.fontSize = v; })),
@@ -199,7 +198,7 @@ const PAGES = {
       toggle('animations', t('preferences_animations'), t('preferences_animations_desc'),
         prefs.animations !== false && !reducedMotion(), (p) => { p.animations = p.animations === false; },
         reducedMotion())),
-    section('preview', t('preferences_section_preview'), '', preview()),
+    section('preview', t('preferences_section_preview'), t('preferences_preview_desc'), preview()),
   ],
   accessibility: () => [
     section('vision', t('preferences_section_vision'), t('preferences_vision_desc'),
