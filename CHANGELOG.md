@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/Project-Colony/MemoryStick/compare/v0.2.0...v0.2.1) (2026-10-14)
+
+
+### Fixes
+
+* keep selected items legible on every accent, show the font in use and update Tauri to 2.12.3 ([#15](https://github.com/Project-Colony/MemoryStick/issues/15)) ([72bac12](https://github.com/Project-Colony/MemoryStick/commit/72bac121db6f63f7f0055f1d1947733e5795e180))
+
 ## [0.2.0](https://github.com/Project-Colony/MemoryStick/compare/v0.1.1...v0.2.0) (2026-10-12)
 
 
