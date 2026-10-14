@@ -33,13 +33,13 @@ jobs:
         with:
           persist-credentials: false
 
-      # Pinned to master with `toolchain: stable` rather than to the `stable`
-      # branch: that branch is rebased onto every master commit, so a SHA
-      # pinned on it stops being reachable from any branch.
-      - uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f # master, 2026-10-09
-        with:
-          toolchain: stable
-          components: clippy, rustfmt
+      # rustup is on every GitHub-hosted runner image: no third-party action to
+      # pin, and nothing for Dependabot to lose track of.
+      - name: Install Rust
+        shell: bash
+        run: |
+          rustup toolchain install stable --profile minimal -c clippy,rustfmt --no-self-update
+          rustup default stable
 
       - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
         with:
@@ -83,6 +83,10 @@ jobs:
   # rust-version in Cargo.toml is a promise; this job is what keeps it. It
   # builds and tests on exactly that toolchain, read from Cargo.toml so the
   # two cannot drift apart.
+  #
+  # RUSTUP_TOOLCHAIN is what pins the cargo invocations: it outranks both the
+  # runner's rustup default and any rust-toolchain.toml. The rustc check makes
+  # a pin that silently stopped working fail loudly.
   msrv:
     name: MSRV
     runs-on: ubuntu-latest
@@ -98,10 +102,10 @@ jobs:
           version=$(sed -n 's/^rust-version = "\(.*\)"$/\1/p' Cargo.toml)
           [ -n "$version" ] || { echo "::error::could not read rust-version from Cargo.toml"; exit 1; }
           echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "RUSTUP_TOOLCHAIN=$version" >> "$GITHUB_ENV"
 
-      - uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f # master, 2026-10-09
-        with:
-          toolchain: ${{ steps.msrv.outputs.version }}
+      - name: Install Rust ${{ steps.msrv.outputs.version }}
+        run: rustup toolchain install "$RUSTUP_TOOLCHAIN" --profile minimal --no-self-update
 
       - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
         with:
@@ -113,7 +117,10 @@ jobs:
           sudo apt-get install -y libwebkit2gtk-4.1-dev
 
       - name: Build and test on the declared floor
-        run: cargo test --locked
+        run: |
+          rustc --version | grep -q "^rustc ${RUSTUP_TOOLCHAIN}[. ]" \
+            || { echo "::error::expected rustc ${RUSTUP_TOOLCHAIN}, got $(rustc --version)"; exit 1; }
+          cargo test --locked
 
   colony-themes:
     name: Colony themes
@@ -122,10 +129,9 @@ jobs:
       run:
         shell: bash
     env:
-      # A Project-Colony-Resources commit whose generated/ matches the one
-      # colony-ui 0.1.6 was published from. Bump it together with
-      # src/ui/vendor/colony/README.md.
-      COLONY_RESOURCES_REV: 7247b814fd9afbb17e3c4f44315ec9333c3a31b0
+      # The Project-Colony-Resources commit src/ui/vendor/colony/ is copied
+      # from. Bump it together with src/ui/vendor/colony/README.md.
+      COLONY_RESOURCES_REV: 8931f2b38422fe75757db6218a6bcbc8caa06a85
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -139,7 +145,7 @@ jobs:
           curl -fsSL --retry 3 "$base/css/colony-accents.css" | cmp - src/ui/vendor/colony/colony-accents.css
           curl -fsSL --retry 3 "$base/themes.json" | cmp - src/ui/vendor/colony/themes.json
 
-      - name: Every theme defines the colours src/ui/ uses
+      - name: Every theme defines the colours src/ui/ uses, and accent labels stay legible
         run: python3 .github/scripts/check-colony-themes.py
 
   # render() in src/ui/app.js is the only place a document's scripts, frames

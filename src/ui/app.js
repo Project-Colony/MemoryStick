@@ -192,7 +192,7 @@ function postProcess() {
           el.outerHTML = html;
         }
       } catch (err) {
-        el.textContent = '\uf071 ' + err.message;
+        el.textContent = '\uf071 ' + t('error_math', String(err.message || err));
       }
     });
   }
