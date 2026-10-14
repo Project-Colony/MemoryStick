@@ -11,7 +11,7 @@ every build.
 | KaTeX | 0.19.0 | MIT | `src/ui/vendor/katex/katex.min.js`, `katex.min.css` ([LICENSE](../src/ui/vendor/katex/LICENSE)) | https://github.com/KaTeX/KaTeX |
 | KaTeX fonts | 0.19.0 | OFL-1.1 | `src/ui/vendor/katex/fonts/` (notice in each font file, licence text in [LICENSE](../src/ui/vendor/katex/LICENSE)) | https://github.com/KaTeX/KaTeX |
 | Mermaid | 11.17.2 | MIT | `src/ui/vendor/mermaid/mermaid.min.js` ([LICENSE](../src/ui/vendor/mermaid/LICENSE)) | https://github.com/mermaid-js/mermaid |
-| Colony themes and accents | Project-Colony-Resources `7247b81` (colony-ui 0.1.6) | GPL-3.0-or-later, like MemoryStick | `src/ui/vendor/colony/` ([README](../src/ui/vendor/colony/README.md)) | https://github.com/Project-Colony/Project-Colony-Resources |
+| Colony themes and accents | Project-Colony-Resources `8931f2b` | GPL-3.0-or-later, like MemoryStick | `src/ui/vendor/colony/` ([README](../src/ui/vendor/colony/README.md)) | https://github.com/Project-Colony/Project-Colony-Resources |
 | JetBrains Mono Nerd Font | 2.304, Nerd Fonts 3.4.0 | OFL-1.1 | `src/ui/fonts/JetBrainsMonoNerdFont-*.ttf` ([LICENSE](../src/ui/fonts/LICENSE)) | https://github.com/ryanoasis/nerd-fonts |
 | OpenDyslexic | 0.990 | OFL-1.1 | `src/ui/fonts/OpenDyslexic-Regular.otf` ([LICENSE](../src/ui/fonts/LICENSE)) | https://opendyslexic.org |
 | Font Awesome 6 Free Solid | 6.7.2 | OFL-1.1 (font), CC-BY-4.0 (icons) | `src/ui/fonts/fa-solid-900.ttf` ([LICENSE](../src/ui/fonts/LICENSE)) | https://fontawesome.com |

@@ -92,6 +92,13 @@ function contrast(a, b) {
   return (hi + 0.05) / (lo + 0.05);
 }
 
+// Text on an accent fill: Colony's ink or paper (colony-accents.css),
+// whichever contrasts more, as colony-ui's contrast_on() picks.
+function onAccent(color) {
+  const [ink, paper] = [cssVar('--colony-ink'), cssVar('--colony-paper')];
+  return contrast(ink, color) >= contrast(paper, color) ? ink : paper;
+}
+
 function applyAppearance() {
   // Back to the theme's own palette first, then the user's changes on top.
   for (const field of Object.keys(HIGH_CONTRAST)) $root.style.removeProperty('--colony-' + field);
@@ -104,6 +111,7 @@ function applyAppearance() {
   // No override, or auto accent, leaves the theme's own accent.
   const accent = !prefs.autoAccent && themeList.accents.find((a) => a.key === prefs.accent);
   if (accent) $root.style.setProperty('--colony-accent-blue', accentColor(accent));
+  $root.style.setProperty('--on-accent', onAccent(cssVar('--colony-accent-blue')));
 
   if (prefs.highContrast) {
     // colony_ui's is_light: YIQ luma of the background over 0.5.

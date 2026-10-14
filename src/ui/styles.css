@@ -154,7 +154,8 @@ button { font: inherit; color: inherit; }
 #toc-nav > ul { padding-left: 0; }
 #toc-nav li { margin: 4px 0; }
 /* Colony's selection rule: the section being read gets the accent behind
-   it, hover gets bg-card-hover, the rest stays muted. */
+   it, with --on-accent text (theme.js), hover gets bg-card-hover, the rest
+   stays muted. */
 #toc-nav a {
   color: var(--colony-text-muted);
   text-decoration: none;
@@ -165,7 +166,7 @@ button { font: inherit; color: inherit; }
   cursor: pointer;
 }
 #toc-nav a:hover { background: var(--colony-bg-card-hover); color: var(--colony-text-primary); }
-#toc-nav a[aria-current] { background: var(--colony-accent-blue); color: var(--colony-text-primary); }
+#toc-nav a[aria-current] { background: var(--colony-accent-blue); color: var(--on-accent); }
 
 body.toc-open #main { margin-left: 280px; }
 
@@ -372,7 +373,7 @@ body.drag-over #drop-hint .hint-title { color: var(--colony-accent-blue); }
   cursor: pointer;
 }
 .category:hover { background: var(--colony-bg-card-hover); }
-.category[aria-current] { background: var(--colony-accent-blue); color: var(--colony-text-primary); }
+.category[aria-current] { background: var(--colony-accent-blue); color: var(--on-accent); }
 
 .prefs-content h2 {
   margin: 0 0 4px;
@@ -414,6 +415,7 @@ body.drag-over #drop-hint .hint-title { color: var(--colony-accent-blue); }
 .setting-label { font-size: calc(14px * var(--font-scale)); }
 .setting-desc { color: var(--colony-text-muted); font-size: calc(12px * var(--font-scale)); margin-top: 2px; }
 .setting-desc:empty { display: none; }
+.setting-value { color: var(--colony-text-secondary); font-size: calc(13px * var(--font-scale)); }
 
 .switch {
   position: relative;
@@ -438,7 +440,7 @@ body.drag-over #drop-hint .hint-title { color: var(--colony-accent-blue); }
   transition: transform 0.15s;
 }
 .switch[aria-checked="true"] { background: var(--colony-accent-blue); }
-.switch[aria-checked="true"] .knob { transform: translateX(18px); background: var(--colony-text-primary); }
+.switch[aria-checked="true"] .knob { transform: translateX(18px); background: var(--on-accent); }
 .switch:disabled { opacity: 0.5; cursor: default; }
 
 .segmented { display: flex; flex-wrap: wrap; gap: 4px; }
@@ -451,7 +453,7 @@ body.drag-over #drop-hint .hint-title { color: var(--colony-accent-blue); }
   cursor: pointer;
 }
 .segmented button:hover { background: var(--colony-btn-hover); }
-.segmented button[aria-checked="true"] { background: var(--colony-accent-blue); color: var(--colony-text-primary); }
+.segmented button[aria-checked="true"] { background: var(--colony-accent-blue); color: var(--on-accent); }
 
 /* Theme cards: the variant's swatch background crossed by its accent, its
    name bottom-left in its own text colour, a check on the chosen one. */
