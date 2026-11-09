@@ -19,7 +19,7 @@ and a table of contents, from a single executable.
 > verified by Colony before it installs or updates it. Before joining Project
 > Colony, the viewer was in use under its former name, MD Viewer. CI builds and
 > tests the Rust side (Markdown rendering, which files a document may read, the
-> preferences) on Linux, Windows and macOS, and on Rust 1.90, the oldest
+> preferences) on Linux, Windows and macOS, and on Rust 1.99, the oldest
 > supported version. The release workflow checks that each executable answers
 > `--version` with the release's version, and that the Intel macOS build is an
 > x86_64 binary. Nothing in CI opens the window, so the interface, Preferences,
@@ -100,7 +100,7 @@ cd MemoryStick
 cargo build --release --locked
 ```
 
-Requires Rust 1.90 or newer and, on Linux, the WebKitGTK 4.1 development
+Requires Rust 1.99 or newer and, on Linux, the WebKitGTK 4.1 development
 package (`libwebkit2gtk-4.1-dev` on Debian and Ubuntu). The executable is
 `target/release/memorystick`. No Tauri CLI or Node.js is needed: `src/` is
 the Rust application, which reads a file and renders its Markdown to HTML,
