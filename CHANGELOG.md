@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.3](https://github.com/Project-Colony/MemoryStick/compare/v0.2.2...v0.2.3) (2026-11-24)
+
+
+### Fixes
+
+* **deps:** update dependencies and Rust to 1.100 ([#28](https://github.com/Project-Colony/MemoryStick/issues/28)) ([90c455f](https://github.com/Project-Colony/MemoryStick/commit/90c455fb9bbce73d8188ac31da24c6cb8813d36b))
+
 ## [0.2.2](https://github.com/Project-Colony/MemoryStick/compare/v0.2.1...v0.2.2) (2026-11-09)
 
 
